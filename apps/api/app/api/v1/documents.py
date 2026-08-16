@@ -21,6 +21,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -29,9 +30,12 @@ from app.models.company import Company
 from app.models.document import Document
 from app.models.processing_job import ProcessingJob
 from app.models.user import User
-from app.schemas.document import DocumentResponse
-from app.services.storage import upload_file_to_s3
-from app.tasks.process_document import run_process_document_stub
+from app.schemas.document import DocumentResponse, DocumentUrlResponse
+from app.services.storage import (
+    generate_presigned_url_for_document,
+    upload_file_to_s3,
+)
+from app.tasks.process_document import retrieve_pdf_bytes, run_process_document_stub
 
 router = APIRouter(tags=["documents"])
 
@@ -259,3 +263,94 @@ def get_document(
         )
 
     return build_document_response(document, db)
+
+
+@router.get(
+    "/documents/{id}/url",
+    response_model=DocumentUrlResponse,
+    summary="Get short-lived signed URL for document PDF viewing",
+)
+def get_document_url(
+    id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns a short-lived presigned URL (15 min expiry) for viewing/downloading document file.
+    Enforces strict workspace tenant isolation — returns 404 (not 403) if document
+    is not found or belongs to another user's workspace.
+    """
+    if not current_user.workspace:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    document = (
+        db.query(Document)
+        .join(Company)
+        .filter(
+            Document.id == id,
+            Company.workspace_id == current_user.workspace.id,
+        )
+        .first()
+    )
+
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    url = generate_presigned_url_for_document(
+        document_id=str(document.id),
+        storage_key=document.storage_key,
+        expires_in=900,
+    )
+    return DocumentUrlResponse(url=url, expires_in=900)
+
+
+@router.get(
+    "/documents/{id}/file",
+    summary="Securely stream document PDF content",
+)
+def get_document_file(
+    id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Securely streams the document PDF file bytes for local/dev fallback viewing.
+    Enforces strict workspace tenant isolation — returns 404 if unauthorized.
+    """
+    if not current_user.workspace:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    document = (
+        db.query(Document)
+        .join(Company)
+        .filter(
+            Document.id == id,
+            Company.workspace_id == current_user.workspace.id,
+        )
+        .first()
+    )
+
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    pdf_bytes = retrieve_pdf_bytes(document.storage_key)
+    if not pdf_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document file content not found",
+        )
+
+    return Response(content=pdf_bytes, media_type="application/pdf")
+

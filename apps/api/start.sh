@@ -4,12 +4,12 @@ set -e
 
 echo "Waiting for postgres..."
 while ! python -c "
-import psycopg2
+import psycopg2, os
 try:
-    conn = psycopg2.connect('$DATABASE_URL')
+    conn = psycopg2.connect(os.environ.get('DATABASE_URL'))
     conn.close()
     exit(0)
-except:
+except Exception:
     exit(1)
 " 2>/dev/null; do
     sleep 1

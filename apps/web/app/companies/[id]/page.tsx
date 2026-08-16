@@ -430,9 +430,19 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
                                 <FileText className="h-5 w-5" />
                               </div>
                               <div className="min-w-0">
-                                <p className="text-sm font-medium leading-none truncate" title={doc.filename}>
-                                  {doc.filename}
-                                </p>
+                                {doc.status === "COMPLETED" ? (
+                                  <Link
+                                    href={`/companies/${companyId}/documents/${doc.id}`}
+                                    className="text-sm font-medium leading-none truncate hover:text-primary hover:underline block"
+                                    title={doc.filename}
+                                  >
+                                    {doc.filename}
+                                  </Link>
+                                ) : (
+                                  <p className="text-sm font-medium leading-none truncate" title={doc.filename}>
+                                    {doc.filename}
+                                  </p>
+                                )}
                                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1.5">
                                   <span>{formatDocType(doc.document_type)}</span>
                                   <span>•</span>
@@ -445,10 +455,18 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
 
                             <div className="flex items-center gap-3 sm:self-center self-end">
                               {renderStatusBadge(doc)}
+                              {doc.status === "COMPLETED" && (
+                                <Link href={`/companies/${companyId}/documents/${doc.id}`}>
+                                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+                                    View
+                                  </Button>
+                                </Link>
+                              )}
                             </div>
                           </div>
                         ))}
                       </div>
+
                     )}
                   </CardContent>
                 </Card>

@@ -73,3 +73,27 @@ export async function fetchDocument(documentId: string): Promise<DocumentItem> {
 
   return res.json();
 }
+
+export type DocumentUrlResponse = {
+  url: string;
+  expires_in: number;
+};
+
+export async function fetchDocumentSignedUrl(documentId: string): Promise<DocumentUrlResponse> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/documents/${documentId}/url`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error("Document not found");
+    }
+    const err = await res.json().catch(() => ({ detail: "Failed to fetch document access URL" }));
+    throw new Error(err.detail || "Failed to fetch document access URL");
+  }
+
+  return res.json();
+}
+

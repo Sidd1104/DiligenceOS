@@ -132,6 +132,19 @@ def test_document_upload_and_tenant_isolation(client):
     assert res_get1.status_code == 200
     assert res_get1.json()["filename"] == "Annual_Report_2025.pdf"
 
+    # 5b. User 1 gets document signed URL -> 200 OK
+    res_url1 = client.get(f"/api/v1/documents/{doc_id}/url")
+    assert res_url1.status_code == 200
+    url_data = res_url1.json()
+    assert "url" in url_data
+    assert url_data["expires_in"] == 900
+
+    # 5c. User 1 streams document file content -> 200 OK
+    res_file1 = client.get(f"/api/v1/documents/{doc_id}/file")
+    assert res_file1.status_code == 200
+    assert res_file1.headers["content-type"] == "application/pdf"
+    assert res_file1.content == valid_pdf_bytes
+
     # 6. Logout User 1
     client.post("/api/v1/auth/logout")
 
@@ -154,3 +167,14 @@ def test_document_upload_and_tenant_isolation(client):
     res_get2 = client.get(f"/api/v1/documents/{doc_id}")
     assert res_get2.status_code == 404
     assert res_get2.json()["detail"] == "Document not found"
+
+    # 10. User 2 attempts to fetch User 1's document URL -> MUST return 404 NOT FOUND
+    res_url2 = client.get(f"/api/v1/documents/{doc_id}/url")
+    assert res_url2.status_code == 404
+    assert res_url2.json()["detail"] == "Document not found"
+
+    # 11. User 2 attempts to stream User 1's document file -> MUST return 404 NOT FOUND
+    res_file2 = client.get(f"/api/v1/documents/{doc_id}/file")
+    assert res_file2.status_code == 404
+    assert res_file2.json()["detail"] == "Document not found"
+

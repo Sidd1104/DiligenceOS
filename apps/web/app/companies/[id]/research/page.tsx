@@ -332,17 +332,27 @@ export default function ResearchPage() {
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {msg.citations.map((cite) => (
-                            <button
-                              key={cite.id}
-                              onClick={() => setActiveCitation(cite)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-2.5 py-1 text-xs text-foreground hover:border-primary hover:text-primary transition-colors shadow-xs"
-                            >
-                              <span>📄 Page {cite.page_number || 1}</span>
-                              <span className="text-muted-foreground">•</span>
-                              <span className="font-medium truncate max-w-[140px]">
-                                {cite.filename || "Document.pdf"}
-                              </span>
-                            </button>
+                            <div key={cite.id} className="flex items-center gap-1">
+                              <Link
+                                href={`/companies/${companyId}/documents/${cite.document_id}?page=${cite.page_number || 1}`}
+                                className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-2.5 py-1 text-xs text-foreground hover:border-primary hover:text-primary transition-colors shadow-xs"
+                              >
+                                <span>📄 Page {cite.page_number || 1}</span>
+                                <span className="text-muted-foreground">•</span>
+                                <span className="font-medium truncate max-w-[140px]">
+                                  {cite.filename || "Document.pdf"}
+                                </span>
+                              </Link>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-1.5 text-[10px] text-muted-foreground hover:text-foreground"
+                                onClick={() => setActiveCitation(cite)}
+                                title="Quick excerpt preview"
+                              >
+                                Excerpt
+                              </Button>
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -378,7 +388,7 @@ export default function ResearchPage() {
                   <CardTitle className="text-base flex items-center justify-between">
                     <span className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-primary" />
-                      Citation Details
+                      Citation Excerpt Preview
                     </span>
                     <Button variant="ghost" size="sm" onClick={() => setActiveCitation(null)}>
                       ✕
@@ -392,11 +402,16 @@ export default function ResearchPage() {
                   <div className="rounded-lg bg-muted/60 p-3 italic border-l-2 border-primary leading-relaxed text-foreground">
                     "{activeCitation.excerpt || "No snippet excerpt available."}"
                   </div>
-                  <div className="flex justify-end">
-                    <Link href={`/companies/${companyId}`}>
-                      <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setActiveCitation(null)}>
+                      Close
+                    </Button>
+                    <Link
+                      href={`/companies/${companyId}/documents/${activeCitation.document_id}?page=${activeCitation.page_number || 1}`}
+                    >
+                      <Button variant="default" size="sm" className="gap-1.5 text-xs shadow-xs">
                         <ExternalLink className="h-3.5 w-3.5" />
-                        View Document Page {activeCitation.page_number}
+                        Open Document Viewer (Page {activeCitation.page_number})
                       </Button>
                     </Link>
                   </div>

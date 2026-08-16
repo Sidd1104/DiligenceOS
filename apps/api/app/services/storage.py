@@ -78,3 +78,39 @@ def upload_file_to_s3(
     except (BotoCoreError, ClientError) as err:
         logger.warning(f"S3 upload warning for key {storage_key}: {err}. Using local fallback cache.")
         return storage_key
+
+
+def generate_presigned_url_for_document(
+    document_id: str,
+    storage_key: str,
+    expires_in: int = 900,
+) -> str:
+    """
+    Generates a short-lived signed S3 URL (default 15 mins = 900s) for document viewing.
+    If S3 is unconfigured or fails, returns local file streaming endpoint URL `/api/v1/documents/{document_id}/file`.
+    """
+    bucket = settings.aws_s3_bucket
+    aws_access_key = settings.aws_access_key_id
+    aws_secret_key = settings.aws_secret_access_key
+    aws_region = settings.aws_region or "ap-south-1"
+
+    if bucket and aws_access_key and aws_secret_key and not aws_access_key.startswith("your-"):
+        try:
+            s3_client = boto3.client(
+                "s3",
+                aws_access_key_id=aws_access_key,
+                aws_secret_access_key=aws_secret_key,
+                region_name=aws_region,
+            )
+            url = s3_client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": bucket, "Key": storage_key},
+                ExpiresIn=expires_in,
+            )
+            return url
+        except Exception as err:
+            logger.warning(f"Failed to generate S3 presigned URL for {storage_key}: {err}")
+
+    # Fallback to local streaming endpoint
+    return f"/api/v1/documents/{document_id}/file"
+

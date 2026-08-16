@@ -25,3 +25,11 @@ class DocumentResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
     error_message: Optional[str] = None
+
+
+class DocumentUrlResponse(BaseModel):
+    """Document presigned/access URL response schema."""
+
+    url: str
+    expires_in: int = 900
+
