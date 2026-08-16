@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
 
 type HealthStatus = {
   status: string;
 } | null;
 
 export default function Home() {
+  const { user } = useAuth();
   const [health, setHealth] = useState<HealthStatus>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,12 +37,28 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
       {/* Logo / Title */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight">
-          DiligenceOS
-        </h1>
+        <h1 className="text-4xl font-bold tracking-tight">DiligenceOS</h1>
         <p className="mt-2 text-muted-foreground">
           AI-powered due-diligence platform
         </p>
+      </div>
+
+      {/* Auth Actions */}
+      <div className="flex items-center gap-3">
+        {user ? (
+          <Link href="/dashboard">
+            <Button>Go to Dashboard ({user.email})</Button>
+          </Link>
+        ) : (
+          <>
+            <Link href="/login">
+              <Button variant="default">Log in</Button>
+            </Link>
+            <Link href="/register">
+              <Button variant="outline">Register</Button>
+            </Link>
+          </>
+        )}
       </div>
 
       {/* Health Check Card */}
@@ -63,7 +83,10 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-green-500" />
             <span className="font-medium">
-              Status: <code className="rounded bg-muted px-1.5 py-0.5 text-sm">{health.status}</code>
+              Status:{" "}
+              <code className="rounded bg-muted px-1.5 py-0.5 text-sm">
+                {health.status}
+              </code>
             </span>
           </div>
         )}
@@ -71,7 +94,8 @@ export default function Home() {
         <p className="mt-4 text-xs text-muted-foreground">
           Fetching from{" "}
           <code className="rounded bg-muted px-1 py-0.5">
-            {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/health
+            {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}
+            /api/v1/health
           </code>
         </p>
       </div>
