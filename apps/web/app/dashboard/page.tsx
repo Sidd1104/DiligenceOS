@@ -114,35 +114,36 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#0b0f19] text-[#f8fafc]">
       {/* Top Header / Navigation Bar */}
-      <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#0b0f19]/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold shadow-xs">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563eb]/10 text-[#2563eb] border border-[#2563eb]/20 shadow-xs">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-base font-semibold tracking-tight">DiligenceOS</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">
-                Analyst Workspace
+              <h1 className="text-base font-semibold tracking-tight font-heading">DiligenceOS</h1>
+              <p className="text-xs text-[#94a3b8] hidden sm:block">
+                Institutional Analyst Workspace
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-mono text-muted-foreground">{user.email}</span>
+            <div className="hidden md:flex items-center gap-2 rounded-full border border-white/10 bg-[#131b2e] px-3 py-1 text-xs">
+              <span className="h-2 w-2 rounded-full bg-[#10b981] animate-pulse" />
+              <span className="font-mono text-[#94a3b8]">{user.email}</span>
             </div>
 
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-[#94a3b8] hover:text-[#f8fafc]">
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">Logout</span>
             </Button>
           </div>
         </div>
       </header>
+
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
