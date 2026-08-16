@@ -6,6 +6,7 @@ Schema reference: docs/01-mvp-requirements-and-schema.md §2.3 `processing_jobs`
 
 from sqlalchemy import Column, String, Text, Index, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
 from app.models.base import Base, UUIDPrimaryKeyMixin

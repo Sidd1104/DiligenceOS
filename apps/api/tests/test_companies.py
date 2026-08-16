@@ -8,7 +8,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.database import Base, get_db
+from app.database import get_db
+from app.models.base import Base
+from app.models.user import User  # noqa
+from app.models.workspace import Workspace  # noqa
+from app.models.company import Company  # noqa
 from app.main import app
 
 # Create in-memory SQLite database for testing
@@ -66,6 +70,12 @@ def test_company_validation(client):
     )
     assert reg.status_code == 201
 
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "val@example.com", "password": "password123"},
+    )
+    assert login.status_code == 200
+
     # Empty name
     res_empty = client.post("/api/v1/companies", json={"name": ""})
     assert res_empty.status_code == 422
@@ -79,7 +89,7 @@ def test_company_creation_and_isolation(client):
     """
     Verify creating, listing, and getting companies works and enforces tenant isolation.
     """
-    # 1. Register User 1
+    # 1. Register & Login User 1
     reg1 = client.post(
         "/api/v1/auth/register",
         json={
@@ -89,7 +99,12 @@ def test_company_creation_and_isolation(client):
         },
     )
     assert reg1.status_code == 201
-    user1_id = reg1.json()["id"]
+
+    login1 = client.post(
+        "/api/v1/auth/login",
+        json={"email": "user1@example.com", "password": "password123"},
+    )
+    assert login1.status_code == 200
 
     # 2. User 1 creates Company A
     res_create = client.post(
@@ -122,7 +137,7 @@ def test_company_creation_and_isolation(client):
     # 5. Log out User 1
     client.post("/api/v1/auth/logout")
 
-    # 6. Register User 2
+    # 6. Register & Login User 2
     reg2 = client.post(
         "/api/v1/auth/register",
         json={
@@ -132,6 +147,12 @@ def test_company_creation_and_isolation(client):
         },
     )
     assert reg2.status_code == 201
+
+    login2 = client.post(
+        "/api/v1/auth/login",
+        json={"email": "user2@example.com", "password": "password123"},
+    )
+    assert login2.status_code == 200
 
     # 7. User 2 lists companies -> MUST BE EMPTY (0 companies) - Tenant Isolation!
     res_list2 = client.get("/api/v1/companies")
