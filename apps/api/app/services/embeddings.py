@@ -65,9 +65,9 @@ def generate_embeddings(texts: List[str]) -> List[List[float]]:
     api_key = settings.voyage_api_key
     in_test = is_test_environment()
 
-    # Deterministic fallback ONLY allowed in pytest suite
-    if in_test and (not api_key or api_key.startswith("your-")):
-        logger.info(f"Test environment detected: using deterministic 1024-dim vectors for {len(texts)} chunks.")
+    # In test environment, always use deterministic 1024-dim fallback vectors
+    if in_test:
+        logger.info(f"Test environment detected: using deterministic 1024-dim fallback vectors for {len(texts)} chunks.")
         return [generate_fallback_embedding(t) for t in texts]
 
     if not api_key or api_key.startswith("your-"):

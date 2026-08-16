@@ -31,7 +31,7 @@ export type ResearchSessionItem = {
 export type ResearchAnswerResponse = {
   session_id: string;
   message_id: string;
-  answer: str;
+  answer: string;
   citations: CitationItem[];
 };
 

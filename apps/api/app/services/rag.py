@@ -24,7 +24,7 @@ from app.services.embeddings import is_test_environment
 
 logger = logging.getLogger("diligenceos.rag")
 
-CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
+CLAUDE_MODEL = "claude-sonnet-4-6"
 
 
 def compute_cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:
@@ -80,7 +80,10 @@ def retrieve_relevant_chunks(
 
         scored_chunks = []
         for chunk, filename in records:
-            sim = compute_cosine_similarity(question_vector, chunk.embedding or [])
+            emb = chunk.embedding if chunk.embedding is not None else []
+            if hasattr(emb, "tolist"):
+                emb = emb.tolist()
+            sim = compute_cosine_similarity(question_vector, list(emb))
             scored_chunks.append((chunk, filename, sim))
 
         # Sort by similarity descending

@@ -26,7 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchCompany, Company } from "@/lib/company";
+import { fetchCompany, Company } from "@/lib/companies";
 import { fetchCompanyDocuments, DocumentItem } from "@/lib/documents";
 import {
   askResearchQuestion,
@@ -172,12 +172,12 @@ export default function ResearchPage() {
       {/* Header Bar */}
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 px-6 backdrop-blur">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" asChild className="gap-2">
-            <Link href={`/companies/${companyId}`}>
+          <Link href={`/companies/${companyId}`}>
+            <Button variant="ghost" size="sm" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back to Overview
-            </Link>
-          </Button>
+            </Button>
+          </Link>
           <div className="h-4 w-px bg-border" />
           <div className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-primary" />
@@ -189,7 +189,7 @@ export default function ResearchPage() {
             )}
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main Content Layout */}
       <div className="flex flex-1 overflow-hidden">
@@ -393,12 +393,12 @@ export default function ResearchPage() {
                     "{activeCitation.excerpt || "No snippet excerpt available."}"
                   </div>
                   <div className="flex justify-end">
-                    <Button variant="outline" size="sm" asChild className="gap-1.5 text-xs">
-                      <Link href={`/companies/${companyId}`}>
+                    <Link href={`/companies/${companyId}`}>
+                      <Button variant="outline" size="sm" className="gap-1.5 text-xs">
                         <ExternalLink className="h-3.5 w-3.5" />
                         View Document Page {activeCitation.page_number}
-                      </Link>
-                    </Button>
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

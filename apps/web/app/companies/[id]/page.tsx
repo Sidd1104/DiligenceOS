@@ -297,12 +297,12 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
               </div>
 
               <div className="flex items-center gap-3">
-                <Button asChild className="gap-2 shadow-sm">
-                  <Link href={`/companies/${company.id}/research`}>
+                <Link href={`/companies/${company.id}/research`}>
+                  <Button className="gap-2 shadow-sm">
                     <Brain className="h-4 w-4" />
                     AI Research Assistant
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
                 {hasPendingDocs && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full w-fit">
                     <RefreshCw className="h-3.5 w-3.5 animate-spin text-primary" />
