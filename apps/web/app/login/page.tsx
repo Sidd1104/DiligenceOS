@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
+import { ShieldCheck, ArrowRight, Lock, Mail, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const { user, loading, login } = useAuth();
@@ -38,84 +39,107 @@ export default function LoginPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#0b0f19] text-[#f8fafc]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#2563eb]" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-muted/20">
-      <div className="w-full max-w-sm rounded-xl border bg-card p-6 shadow-sm">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold">Log in to DiligenceOS</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Enter your credentials to access your account
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-[#0b0f19] text-[#f8fafc]">
+      <div className="w-full max-w-md space-y-6">
+        {/* Branding Header */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#2563eb]/10 text-[#2563eb] border border-[#2563eb]/20 shadow-xs mb-1">
+            <ShieldCheck className="h-6 w-6" />
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight font-heading">DiligenceOS</h1>
+          <p className="text-xs text-[#94a3b8] max-w-xs mx-auto">
+            Institutional due-diligence & evidence retrieval portal
           </p>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded bg-destructive/10 p-3 text-sm text-destructive border border-destructive/20">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Auth Card */}
+        <div className="rounded-2xl border border-white/10 bg-[#131b2e] p-8 shadow-xl backdrop-blur-md space-y-6">
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium mb-1.5"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="analyst@firm.com"
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
-            />
+            <h2 className="text-lg font-medium text-[#f8fafc]">Log in to your account</h2>
+            <p className="text-xs text-[#94a3b8] mt-1">Enter your enterprise credentials below</p>
           </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium mb-1.5"
+          {error && (
+            <div className="rounded-xl bg-[#ef4444]/10 p-3.5 text-xs text-[#ef4444] border border-[#ef4444]/20 flex items-center gap-2">
+              <span className="font-semibold">Authentication Error:</span>
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="block text-xs font-medium text-[#94a3b8]">
+                Work Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-[#94a3b8]" />
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="analyst@firm.com"
+                  className="w-full rounded-lg border border-white/10 bg-[#080b14] pl-9 pr-3 py-2 text-sm text-[#f8fafc] placeholder:text-[#94a3b8]/50 outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="block text-xs font-medium text-[#94a3b8]">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-[#94a3b8]" />
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-lg border border-white/10 bg-[#080b14] pl-9 pr-3 py-2 text-sm text-[#f8fafc] placeholder:text-[#94a3b8]/50 outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]"
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-10 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-medium text-sm rounded-lg shadow-sm gap-2 mt-2"
+              disabled={isSubmitting}
             >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
-            />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Authenticating...
+                </>
+              ) : (
+                <>
+                  Log in to Workspace
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </form>
+
+          <div className="pt-2 border-t border-white/10 text-center">
+            <p className="text-xs text-[#94a3b8]">
+              Don&apos;t have an enterprise account?{" "}
+              <Link href="/register" className="font-semibold text-[#2563eb] hover:underline">
+                Create Account
+              </Link>
+            </p>
           </div>
-
-          <Button
-            type="submit"
-            className="w-full mt-2"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Logging in..." : "Log in"}
-          </Button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/register"
-            className="font-medium text-primary hover:underline"
-          >
-            Register
-          </Link>
-        </p>
+        </div>
       </div>
     </div>
   );
 }
+

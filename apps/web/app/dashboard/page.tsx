@@ -146,16 +146,50 @@ export default function DashboardPage() {
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Telemetry Hero Section (Signature 3D Parallax Moment) */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#131b2e] via-[#0f1525] to-[#0b0f19] p-6 sm:p-8 shadow-xl">
+          <div className="absolute -right-12 -top-12 h-64 w-64 rounded-full bg-[#2563eb]/10 blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-xl">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#2563eb]/10 px-3 py-1 text-xs font-mono text-[#2563eb] border border-[#2563eb]/20">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>INSTITUTIONAL TELEMETRY</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight font-heading text-[#f8fafc]">
+                Portfolio Due-Diligence Workspace
+              </h2>
+              <p className="text-xs sm:text-sm text-[#94a3b8] leading-relaxed">
+                Evidence-backed financial analysis, page-accurate document extraction, and grounded AI research for investment professionals.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="rounded-xl border border-white/10 bg-[#080b14]/60 p-3.5 text-center backdrop-blur-xs">
+                <p className="text-[11px] font-medium text-[#94a3b8] uppercase tracking-wider">Entities</p>
+                <p className="text-2xl font-bold text-[#f8fafc] font-mono mt-0.5">{companies.length}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-[#080b14]/60 p-3.5 text-center backdrop-blur-xs">
+                <p className="text-[11px] font-medium text-[#94a3b8] uppercase tracking-wider">Pipeline</p>
+                <p className="text-2xl font-bold text-[#10b981] font-mono mt-0.5">Active</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-[#080b14]/60 p-3.5 text-center backdrop-blur-xs col-span-2 sm:col-span-1">
+                <p className="text-[11px] font-medium text-[#94a3b8] uppercase tracking-wider">Embeddings</p>
+                <p className="text-2xl font-bold text-[#2563eb] font-mono mt-0.5">1024-d</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Dashboard Title & Actions Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-6">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Companies</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage target companies and due-diligence workspace entities
+            <h3 className="text-xl font-semibold tracking-tight font-heading text-[#f8fafc]">Target Companies</h3>
+            <p className="text-xs text-[#94a3b8] mt-1">
+              Select or create a company workspace to manage documents and run AI research.
             </p>
           </div>
 
-          <Button onClick={handleOpenDialog} className="gap-2 shadow-xs sm:self-auto self-start">
+          <Button onClick={handleOpenDialog} className="gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-xs sm:self-auto self-start">
             <Plus className="h-4 w-4" />
             New Company
           </Button>
@@ -163,7 +197,7 @@ export default function DashboardPage() {
 
         {/* Error Alert if initial loading failed */}
         {error && (
-          <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive flex items-center justify-between">
+          <div className="rounded-xl border border-[#ef4444]/30 bg-[#ef4444]/10 p-4 text-[#ef4444] flex items-center justify-between">
             <div className="flex items-center gap-3">
               <AlertCircle className="h-5 w-5 shrink-0" />
               <p className="text-sm font-medium">{error}</p>
