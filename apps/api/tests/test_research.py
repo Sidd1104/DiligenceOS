@@ -14,7 +14,8 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import get_db
 from app.main import app
-from app.models import Base
+from app.models import Base, DocumentChunk, ProcessingJob
+from app.tasks.process_document import run_process_document_stub
 
 
 @pytest.fixture(autouse=True)
@@ -88,6 +89,22 @@ def create_adversarial_pdf_bytes() -> bytes:
     return pdf_bytes
 
 
+def process_doc_synchronously(doc_id_str: str, pdf_bytes: bytes):
+    """Executes document processing task synchronously for test environment."""
+    db_gen = app.dependency_overrides[get_db]()
+    db = next(db_gen)
+    try:
+        doc_id = UUID(doc_id_str)
+        job = db.query(ProcessingJob).filter(ProcessingJob.document_id == doc_id).first()
+        if job:
+            run_process_document_stub(str(job.id), pdf_bytes, db)
+    finally:
+        try:
+            next(db_gen)
+        except StopIteration:
+            pass
+
+
 def test_research_answerable_question_with_citations(client):
     """
     Tests asking an answerable question against an uploaded processed PDF:
@@ -111,13 +128,14 @@ def test_research_answerable_question_with_citations(client):
     assert res_comp.status_code == 201
     comp_id = res_comp.json()["id"]
 
-    # 3. Upload & Process PDF
+    # 3. Upload & Process PDF synchronously
     pdf_bytes = create_sample_financial_pdf_bytes()
     res_upload = client.post(
         f"/api/v1/companies/{comp_id}/documents",
         files={"file": ("stark_annual_report.pdf", pdf_bytes, "application/pdf")},
     )
     assert res_upload.status_code == 202
+    process_doc_synchronously(res_upload.json()["id"], pdf_bytes)
 
     # 4. Ask Research Question
     res_qa = client.post(
@@ -134,7 +152,7 @@ def test_research_answerable_question_with_citations(client):
 
     # Verify citation pointing to the document (REQ-RAG-04, REQ-CITE-01)
     citations = data["citations"]
-    assert len(citations) >= 1, "Expected at least 1 citation pointing to the document"
+    assert len(citations) >= 1, f"Expected at least 1 citation pointing to the document, got {citations}"
     first_citation = citations[0]
     assert first_citation["filename"] == "stark_annual_report.pdf"
     assert first_citation["page_number"] in [1, 2]
@@ -194,12 +212,14 @@ def test_prompt_injection_defense_and_citation_fallback(client):
     )
     comp_id = res_comp.json()["id"]
 
-    # Upload adversarial PDF
+    # Upload adversarial PDF & process synchronously
     pdf_bytes = create_adversarial_pdf_bytes()
-    client.post(
+    res_upload = client.post(
         f"/api/v1/companies/{comp_id}/documents",
         files={"file": ("adversarial_doc.pdf", pdf_bytes, "application/pdf")},
     )
+    assert res_upload.status_code == 202
+    process_doc_synchronously(res_upload.json()["id"], pdf_bytes)
 
     # Ask standard question
     res_qa = client.post(
@@ -236,12 +256,14 @@ def test_research_session_history_and_tenant_isolation(client):
     res_comp1 = client.post("/api/v1/companies", json={"name": "Company One"})
     comp1_id = res_comp1.json()["id"]
 
-    # Upload doc & ask research question
+    # Upload doc & process
     pdf_bytes = create_sample_financial_pdf_bytes()
-    client.post(
+    res_upload = client.post(
         f"/api/v1/companies/{comp1_id}/documents",
         files={"file": ("comp1_report.pdf", pdf_bytes, "application/pdf")},
     )
+    assert res_upload.status_code == 202
+    process_doc_synchronously(res_upload.json()["id"], pdf_bytes)
 
     res_qa1 = client.post(
         f"/api/v1/companies/{comp1_id}/research",

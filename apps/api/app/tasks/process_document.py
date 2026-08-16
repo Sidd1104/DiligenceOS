@@ -55,7 +55,10 @@ def retrieve_pdf_bytes(storage_key: str) -> Optional[bytes]:
             logger.warning(f"Failed to fetch {storage_key} from S3: {err}")
 
     # 2. Local dev / test fallback
-    local_path = os.path.join("/tmp", storage_key)
+    import tempfile
+
+    clean_key = storage_key.replace("/", os.sep)
+    local_path = os.path.join(tempfile.gettempdir(), clean_key)
     if os.path.exists(local_path):
         with open(local_path, "rb") as f:
             return f.read()
