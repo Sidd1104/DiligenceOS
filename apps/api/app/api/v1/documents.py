@@ -50,6 +50,24 @@ def infer_document_type(filename: str) -> str:
     return "other"
 
 
+def build_document_response(doc: Document, db: Session) -> DocumentResponse:
+    """Helper to populate error_message from ProcessingJob if document failed."""
+    err_msg = None
+    if doc.status == "FAILED":
+        job = (
+            db.query(ProcessingJob)
+            .filter(ProcessingJob.document_id == doc.id)
+            .order_by(ProcessingJob.created_at.desc())
+            .first()
+        )
+        if job and job.error_message:
+            err_msg = job.error_message
+
+    resp = DocumentResponse.model_validate(doc)
+    resp.error_message = err_msg
+    return resp
+
+
 @router.post(
     "/companies/{company_id}/documents",
     response_model=DocumentResponse,
@@ -152,7 +170,7 @@ async def upload_document(
     # 8. Trigger background processing task
     background_tasks.add_task(run_process_document_stub, str(job.id), content)
 
-    return document
+    return build_document_response(document, db)
 
 
 @router.get(
@@ -200,7 +218,7 @@ def list_company_documents(
         .limit(limit)
         .all()
     )
-    return documents
+    return [build_document_response(doc, db) for doc in documents]
 
 
 @router.get(
@@ -240,4 +258,4 @@ def get_document(
             detail="Document not found",
         )
 
-    return document
+    return build_document_response(document, db)

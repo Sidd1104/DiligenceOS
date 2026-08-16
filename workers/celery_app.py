@@ -32,3 +32,11 @@ celery_app.conf.update(
 def health_check_task():
     """Placeholder task — verifies the worker is connected and running."""
     return {"status": "worker_ok"}
+
+
+@celery_app.task(name="diligenceos.process_document")
+def process_document_task(job_id_str: str):
+    """Celery task entry point for document processing."""
+    from app.tasks.process_document import run_process_document_stub
+    run_process_document_stub(job_id_str)
+    return {"status": "completed", "job_id": job_id_str}

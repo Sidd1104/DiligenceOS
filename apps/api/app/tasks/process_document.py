@@ -17,6 +17,8 @@ import uuid
 from typing import Optional
 from uuid import UUID
 
+from sqlalchemy.orm import Session
+
 from app.config import settings
 from app.database import SessionLocal
 from app.models.document import Document
@@ -53,7 +55,6 @@ def retrieve_pdf_bytes(storage_key: str) -> Optional[bytes]:
             logger.warning(f"Failed to fetch {storage_key} from S3: {err}")
 
     # 2. Local dev / test fallback
-    # In test/dev environment where files are mock or saved locally
     local_path = os.path.join("/tmp", storage_key)
     if os.path.exists(local_path):
         with open(local_path, "rb") as f:
@@ -62,13 +63,34 @@ def retrieve_pdf_bytes(storage_key: str) -> Optional[bytes]:
     return None
 
 
-def run_process_document_stub(job_id_str: str, pdf_bytes_override: Optional[bytes] = None) -> None:
+def run_process_document_stub(
+    job_id_str: str,
+    pdf_bytes_override: Optional[bytes] = None,
+    db: Optional[Session] = None,
+) -> None:
     """
     Executes the document processing pipeline for a given job ID.
+    If `db` session is provided, reuses it. Otherwise checks dependency overrides
+    (for tests) or falls back to SessionLocal().
     """
-    db = SessionLocal()
+    close_db_when_done = False
+    if db is None:
+        from app.api.deps import get_db
+        from app.main import app
+
+        if get_db in app.dependency_overrides:
+            try:
+                db_gen = app.dependency_overrides[get_db]()
+                db = next(db_gen)
+            except Exception:
+                db = SessionLocal()
+                close_db_when_done = True
+        else:
+            db = SessionLocal()
+            close_db_when_done = True
+
     try:
-        job_id = UUID(job_id_str)
+        job_id = UUID(str(job_id_str))
         job = db.query(ProcessingJob).filter(ProcessingJob.id == job_id).first()
         if not job:
             logger.error(f"ProcessingJob {job_id_str} not found")
@@ -91,7 +113,6 @@ def run_process_document_stub(job_id_str: str, pdf_bytes_override: Optional[byte
         # 2. Get PDF bytes
         pdf_bytes = pdf_bytes_override or retrieve_pdf_bytes(doc.storage_key)
         if not pdf_bytes:
-            # Check if storage key ends with valid extension or if we can handle in memory
             raise ValueError("Could not download document file from storage location")
 
         # 3. Extract text page-by-page preserving page numbers
@@ -172,4 +193,5 @@ def run_process_document_stub(job_id_str: str, pdf_bytes_override: Optional[byte
         except Exception:
             db.rollback()
     finally:
-        db.close()
+        if close_db_when_done and db is not None:
+            db.close()

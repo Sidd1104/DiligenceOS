@@ -5,7 +5,7 @@ DiligenceOS API — FastAPI application entry point.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import auth, companies, documents
+from app.api.v1 import auth, companies, documents, research
 
 app = FastAPI(
     title="DiligenceOS API",
@@ -31,6 +31,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(companies.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1")
+app.include_router(research.router, prefix="/api/v1")
 
 
 # ── Health Check ──────────────────────────────────────────────

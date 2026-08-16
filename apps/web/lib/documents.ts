@@ -11,6 +11,7 @@ export type DocumentItem = {
   file_size_bytes?: number | null;
   created_at: string;
   updated_at?: string | null;
+  error_message?: string | null;
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
