@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, ArrowRight, Lock, Mail, User, Loader2 } from "lucide-react";
+import { AuroraBackground } from "@/components/ui/aurora-background";
 
 export default function RegisterPage() {
   const { user, loading, register } = useAuth();
@@ -40,14 +41,15 @@ export default function RegisterPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0b0f19] text-[#f8fafc]">
+      <AuroraBackground className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#2563eb]" />
-      </div>
+      </AuroraBackground>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-[#0b0f19] text-[#f8fafc]">
+    <AuroraBackground className="flex min-h-screen flex-col items-center justify-center p-4">
+
       <div className="w-full max-w-md space-y-6">
         {/* Branding Header */}
         <div className="text-center space-y-2">
@@ -158,6 +160,7 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
-    </div>
+    </AuroraBackground>
   );
 }
+

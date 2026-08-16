@@ -92,4 +92,47 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-outfit), sans-serif;
   }
-}
+}
+
+/* Ambient Aurora Drifting Animations */
+@keyframes aurora-slow {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(50px, 35px) scale(1.08);
+  }
+}
+
+@keyframes aurora-reverse {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-40px, -30px) scale(1.06);
+  }
+}
+
+@keyframes aurora-pulse {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(1.05);
+  }
+}
+
+.animate-aurora-slow {
+  animation: aurora-slow 50s ease-in-out infinite;
+}
+
+.animate-aurora-reverse {
+  animation: aurora-reverse 60s ease-in-out infinite;
+}
+
+.animate-aurora-pulse {
+  animation: aurora-pulse 40s ease-in-out infinite;
+}
+
