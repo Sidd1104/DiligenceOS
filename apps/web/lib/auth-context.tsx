@@ -13,8 +13,8 @@ export type User = {
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: str) => Promise<void>;
-  register: (email: string, password: str, fullName?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, fullName?: string) => Promise<void>;
   logout: () => Promise<void>;
   refetchUser: () => Promise<void>;
 };
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refetchUser();
   }, []);
 
-  const login = async (email: string, password: str) => {
+  const login = async (email: string, password: string) => {
     const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData);
   };
 
-  const register = async (email: string, password: str, fullName?: string) => {
+  const register = async (email: string, password: string, fullName?: string) => {
     const res = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
