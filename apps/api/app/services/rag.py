@@ -164,6 +164,55 @@ def build_rag_prompt(question: str, chunks_info: List[dict]) -> Tuple[str, str]:
     return system_prompt, user_prompt
 
 
+def stream_rag_answer(question: str, chunks_info: List[dict]):
+    """
+    Generator yielding text delta tokens from Anthropic API (claude-sonnet-4-6)
+    in streaming mode (stream=True) or simulated token stream for test/dev mode.
+    """
+    if not chunks_info:
+        yield "Based on the provided documents, I could not find relevant evidence to answer your question."
+        return
+
+    system_prompt, user_prompt = build_rag_prompt(question, chunks_info)
+    api_key = settings.anthropic_api_key
+    in_test = is_test_environment()
+
+    if in_test or not api_key or api_key.startswith("your-"):
+        logger.info("Using grounded streaming fallback response for RAG generation (test/dev mode).")
+        top_chunk = chunks_info[0]
+        summary_text = top_chunk["text"][:300].strip()
+        fallback_text = (
+            f"Based on the provided evidence in [Chunk 1] ({top_chunk['filename']}, Page {top_chunk['page_number']}), "
+            f"here is the relevant details regarding your inquiry:\n\n"
+            f"{summary_text}"
+        )
+        words = fallback_text.split(" ")
+        for i, w in enumerate(words):
+            yield w + (" " if i < len(words) - 1 else "")
+        return
+
+    try:
+        import anthropic
+
+        client = anthropic.Anthropic(api_key=api_key)
+        with client.messages.stream(
+            model=CLAUDE_MODEL,
+            max_tokens=1024,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_prompt}],
+        ) as stream:
+            for text_delta in stream.text_stream:
+                yield text_delta
+    except Exception as err:
+        logger.error(f"Anthropic streaming API call failed: {err}")
+        top_chunk = chunks_info[0]
+        fallback_err = (
+            f"Based on [Chunk 1] ({top_chunk['filename']}, Page {top_chunk['page_number']}):\n\n"
+            f"{top_chunk['text'][:300]}"
+        )
+        yield fallback_err
+
+
 def generate_rag_answer(question: str, chunks_info: List[dict]) -> str:
     """
     Calls Anthropic API (claude-sonnet-4-6) to generate a grounded RAG response.

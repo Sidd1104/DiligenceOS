@@ -97,3 +97,18 @@ export async function fetchDocumentSignedUrl(documentId: string): Promise<Docume
   return res.json();
 }
 
+export async function retryDocument(documentId: string): Promise<DocumentItem> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/documents/${documentId}/retry`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to retry document processing" }));
+    throw new Error(err.detail || "Failed to retry document processing");
+  }
+
+  return res.json();
+}
+

@@ -25,6 +25,7 @@ import {
   DocumentItem,
   DocumentStatus,
   fetchCompanyDocuments,
+  retryDocument,
   uploadDocument,
 } from "@/lib/documents";
 import { Button } from "@/components/ui/button";
@@ -47,12 +48,25 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
   const [loadingCompany, setLoadingCompany] = useState<boolean>(true);
   const [loadingDocs, setLoadingDocs] = useState<boolean>(true);
 
-  // Upload & Error States
+  // Upload & Retry & Error States
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState<boolean>(false);
+  const [retryingIds, setRetryingIds] = useState<Record<string, boolean>>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleRetry = async (documentId: string) => {
+    try {
+      setRetryingIds((prev) => ({ ...prev, [documentId]: true }));
+      await retryDocument(documentId);
+      await loadDocuments(false);
+    } catch (err: any) {
+      console.error("Failed to retry document processing:", err);
+    } finally {
+      setRetryingIds((prev) => ({ ...prev, [documentId]: false }));
+    }
+  };
 
   // Redirect if unauthenticated
   useEffect(() => {
@@ -459,6 +473,27 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
 
                             <div className="flex items-center gap-3 sm:self-center self-end">
                               {renderStatusBadge(doc)}
+                              {doc.status === "FAILED" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={retryingIds[doc.id]}
+                                  onClick={() => handleRetry(doc.id)}
+                                  className="h-7 text-xs gap-1.5 border-[#ef4444]/30 bg-[#ef4444]/10 text-[#ef4444] hover:bg-[#ef4444]/20 hover:text-red-400"
+                                >
+                                  {retryingIds[doc.id] ? (
+                                    <>
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                      Retrying...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <RefreshCw className="h-3 w-3" />
+                                      Retry
+                                    </>
+                                  )}
+                                </Button>
+                              )}
                               {doc.status === "COMPLETED" && (
                                 <Link href={`/companies/${companyId}/documents/${doc.id}`}>
                                   <Button variant="outline" size="sm" className="h-7 text-xs gap-1 border-white/10 bg-[#131b2e] text-[#f8fafc] hover:bg-[#1c273e]">

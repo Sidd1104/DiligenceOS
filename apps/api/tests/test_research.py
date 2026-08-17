@@ -4,6 +4,7 @@ grounded answers with citations (REQ-RAG-04, REQ-CITE-01..03), prompt injection 
 and tenant isolation.
 """
 
+import json
 from uuid import UUID
 import fitz  # PyMuPDF
 import pytest
@@ -105,10 +106,35 @@ def process_doc_synchronously(doc_id_str: str, pdf_bytes: bytes):
             pass
 
 
+def parse_sse_stream_response(res_text: str):
+    """
+    Helper to parse SSE event lines from response text.
+    Returns (assembled_answer_text, done_event_dict).
+    """
+    assembled_answer = ""
+    done_event = None
+
+    lines = res_text.split("\n\n")
+    for line in lines:
+        trimmed = line.strip()
+        if trimmed.startswith("data:"):
+            json_str = trimmed[5:].strip()
+            if not json_str:
+                continue
+            data = json.loads(json_str)
+            if data.get("type") == "text_delta":
+                assembled_answer += data.get("text", "")
+            elif data.get("type") in ["done", "error"]:
+                done_event = data
+
+    return assembled_answer, done_event
+
+
 def test_research_answerable_question_with_citations(client):
     """
     Tests asking an answerable question against an uploaded processed PDF:
-    Verifies response is grounded and includes at least one valid citation (REQ-RAG-04, REQ-CITE-01..03).
+    Verifies response streams token-by-token and includes at least one valid citation (REQ-RAG-04, REQ-CITE-01..03, REQ-PERF-02).
+    Also confirms research_messages and citations rows are persisted in DB.
     """
     # 1. Register & Login
     client.post(
@@ -137,21 +163,23 @@ def test_research_answerable_question_with_citations(client):
     assert res_upload.status_code == 202
     process_doc_synchronously(res_upload.json()["id"], pdf_bytes)
 
-    # 4. Ask Research Question
+    # 4. Ask Research Question (returns SSE stream)
     res_qa = client.post(
         f"/api/v1/companies/{comp_id}/research",
         json={"question": "What was the annual revenue in FY2025?"},
     )
     assert res_qa.status_code == 200
-    data = res_qa.json()
+    assert "text/event-stream" in res_qa.headers.get("content-type", "")
 
-    assert "session_id" in data
-    assert "message_id" in data
-    assert "answer" in data
-    assert len(data["answer"]) > 0
+    answer_text, done_event = parse_sse_stream_response(res_qa.text)
+
+    assert done_event is not None
+    assert "session_id" in done_event
+    assert "message_id" in done_event
+    assert len(answer_text) > 0
 
     # Verify citation pointing to the document (REQ-RAG-04, REQ-CITE-01)
-    citations = data["citations"]
+    citations = done_event["citations"]
     assert len(citations) >= 1, f"Expected at least 1 citation pointing to the document, got {citations}"
     first_citation = citations[0]
     assert first_citation["filename"] == "stark_annual_report.pdf"
@@ -185,10 +213,10 @@ def test_research_unanswerable_question_relevance_threshold(client):
         json={"question": "What is the employee retention rate?"},
     )
     assert res_qa.status_code == 200
-    data = res_qa.json()
+    answer_text, done_event = parse_sse_stream_response(res_qa.text)
 
-    assert "could not find" in data["answer"].lower() or "no relevant evidence" in data["answer"].lower()
-    assert data["citations"] == []
+    assert "could not find" in answer_text.lower() or "no relevant evidence" in answer_text.lower()
+    assert done_event["citations"] == []
 
 
 def test_prompt_injection_defense_and_citation_fallback(client):
@@ -227,15 +255,16 @@ def test_prompt_injection_defense_and_citation_fallback(client):
         json={"question": "What was the company revenue?"},
     )
     assert res_qa.status_code == 200
-    data = res_qa.json()
+    answer_text, done_event = parse_sse_stream_response(res_qa.text)
 
     # Verify prompt injection attempt was NOT executed
-    assert "ATTACK SUCCESSFUL" not in data["answer"]
-    assert "SYSTEM COMPROMISED" not in data["answer"]
+    assert "ATTACK SUCCESSFUL" not in answer_text
+    assert "SYSTEM COMPROMISED" not in answer_text
 
     # Verify citation fallback produced valid citation even if markers were absent
-    assert len(data["citations"]) >= 1
-    assert data["citations"][0]["filename"] == "adversarial_doc.pdf"
+    citations = done_event["citations"]
+    assert len(citations) >= 1
+    assert citations[0]["filename"] == "adversarial_doc.pdf"
 
 
 def test_research_session_history_and_tenant_isolation(client):
@@ -270,7 +299,8 @@ def test_research_session_history_and_tenant_isolation(client):
         json={"question": "What are the risk factors?"},
     )
     assert res_qa1.status_code == 200
-    session_id = res_qa1.json()["session_id"]
+    _, done_event = parse_sse_stream_response(res_qa1.text)
+    session_id = done_event["session_id"]
 
     # Fetch sessions for Company One
     res_sess = client.get(f"/api/v1/companies/{comp1_id}/research/sessions")
@@ -279,11 +309,12 @@ def test_research_session_history_and_tenant_isolation(client):
     assert len(sessions_data) >= 1
     assert sessions_data[0]["id"] == session_id
 
-    # Fetch session messages
+    # Fetch session messages (verifying persistent storage of message & citations)
     res_msgs = client.get(f"/api/v1/research/sessions/{session_id}/messages")
     assert res_msgs.status_code == 200
     msgs = res_msgs.json()
     assert len(msgs) == 2  # 1 user message + 1 assistant message
+    assert len(msgs[1]["citations"]) >= 1
 
     # User 2 (Tenant Isolation)
     client.post(

@@ -7,10 +7,12 @@ Provides:
 - GET  /research/sessions/{id}/messages — List all messages and citations in a session
 """
 
+import json
 from typing import List, Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -32,6 +34,7 @@ from app.services.rag import (
     extract_and_save_citations,
     generate_rag_answer,
     retrieve_relevant_chunks,
+    stream_rag_answer,
 )
 
 router = APIRouter(tags=["research"])
@@ -39,9 +42,8 @@ router = APIRouter(tags=["research"])
 
 @router.post(
     "/companies/{company_id}/research",
-    response_model=ResearchAnswerResponse,
     status_code=status.HTTP_200_OK,
-    summary="Ask a question against company documents (RAG Q&A)",
+    summary="Ask a question against company documents (RAG Q&A with token streaming)",
 )
 def ask_company_research_question(
     company_id: UUID,
@@ -50,7 +52,7 @@ def ask_company_research_question(
     db: Session = Depends(get_db),
 ):
     """
-    Executes a RAG query against company document chunks.
+    Executes a RAG query against company document chunks and streams the response token-by-token using SSE.
     Enforces strict workspace tenant isolation.
     """
     if not current_user.workspace:
@@ -109,60 +111,105 @@ def ask_company_research_question(
     # 4. Vector retrieval of document chunks
     chunks_info, max_score = retrieve_relevant_chunks(db, company_id, question_vector, top_k=8)
 
+    # Extract session.id to local variable before DB session expiration/detach in generator
+    target_session_id = session.id
+    session_id_str = str(target_session_id)
+
     # 5. Save User Message
     user_msg = ResearchMessage(
         id=uuid4(),
-        session_id=session.id,
+        session_id=target_session_id,
         role="user",
         content=payload.question,
     )
     db.add(user_msg)
-
-    # 6. Relevance Thresholding Check (REQ-RAG-05)
-    if not chunks_info or max_score < 0.15:
-        no_evidence_answer = (
-            "Based on the provided documents, I could not find relevant evidence to answer your question."
-        )
-        assistant_msg = ResearchMessage(
-            id=uuid4(),
-            session_id=session.id,
-            role="assistant",
-            content=no_evidence_answer,
-        )
-        db.add(assistant_msg)
-        db.commit()
-
-        return ResearchAnswerResponse(
-            session_id=session.id,
-            message_id=assistant_msg.id,
-            answer=no_evidence_answer,
-            citations=[],
-        )
-
-    # 7. Generate RAG answer
-    answer_text = generate_rag_answer(payload.question, chunks_info)
-
-    # 8. Save Assistant Message
-    assistant_msg = ResearchMessage(
-        id=uuid4(),
-        session_id=session.id,
-        role="assistant",
-        content=answer_text,
-    )
-    db.add(assistant_msg)
     db.commit()
 
-    # 9. Extract and save Citations (REQ-CITE-01..03)
-    citations_data = extract_and_save_citations(db, assistant_msg.id, answer_text, chunks_info)
+    def sse_event_generator():
+        assistant_msg_id = uuid4()
+        full_answer_parts = []
 
-    citation_responses = [CitationResponse(**c) for c in citations_data]
+        try:
+            # 6. Relevance Thresholding Check (REQ-RAG-05)
+            if not chunks_info or max_score < 0.15:
+                no_evidence_answer = (
+                    "Based on the provided documents, I could not find relevant evidence to answer your question."
+                )
+                assistant_msg = ResearchMessage(
+                    id=assistant_msg_id,
+                    session_id=target_session_id,
+                    role="assistant",
+                    content=no_evidence_answer,
+                )
+                db.add(assistant_msg)
+                db.commit()
 
-    return ResearchAnswerResponse(
-        session_id=session.id,
-        message_id=assistant_msg.id,
-        answer=answer_text,
-        citations=citation_responses,
-    )
+                delta_payload = json.dumps({"type": "text_delta", "text": no_evidence_answer})
+                yield f"data: {delta_payload}\n\n"
+
+                done_payload = json.dumps({
+                    "type": "done",
+                    "session_id": session_id_str,
+                    "message_id": str(assistant_msg_id),
+                    "citations": [],
+                })
+                yield f"data: {done_payload}\n\n"
+                return
+
+            # 7. Stream tokens token-by-token
+            for text_delta in stream_rag_answer(payload.question, chunks_info):
+                full_answer_parts.append(text_delta)
+                delta_payload = json.dumps({"type": "text_delta", "text": text_delta})
+                yield f"data: {delta_payload}\n\n"
+
+            # 8. Save Assistant Message
+            full_answer_text = "".join(full_answer_parts)
+            assistant_msg = ResearchMessage(
+                id=assistant_msg_id,
+                session_id=target_session_id,
+                role="assistant",
+                content=full_answer_text,
+            )
+            db.add(assistant_msg)
+            db.commit()
+
+            # 9. Extract and save Citations (REQ-CITE-01..03)
+            citations_data = extract_and_save_citations(db, assistant_msg.id, full_answer_text, chunks_info)
+
+            done_payload = json.dumps({
+                "type": "done",
+                "session_id": session_id_str,
+                "message_id": str(assistant_msg_id),
+                "citations": citations_data,
+            })
+            yield f"data: {done_payload}\n\n"
+
+        except Exception as err:
+            partial_text = "".join(full_answer_parts) or "An error occurred while generating response."
+            try:
+                assistant_msg = ResearchMessage(
+                    id=assistant_msg_id,
+                    session_id=target_session_id,
+                    role="assistant",
+                    content=partial_text,
+                )
+                db.add(assistant_msg)
+                db.commit()
+                citations_data = extract_and_save_citations(db, assistant_msg.id, partial_text, chunks_info) if chunks_info else []
+            except Exception:
+                db.rollback()
+                citations_data = []
+
+            err_payload = json.dumps({
+                "type": "error",
+                "detail": str(err),
+                "session_id": session_id_str,
+                "message_id": str(assistant_msg_id),
+                "citations": citations_data,
+            })
+            yield f"data: {err_payload}\n\n"
+
+    return StreamingResponse(sse_event_generator(), media_type="text/event-stream")
 
 
 @router.get(

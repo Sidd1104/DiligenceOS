@@ -5,10 +5,11 @@ Provides /register, /login, /logout, and /me.
 Session authentication uses HttpOnly cookies.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.core.rate_limit import limiter
 from app.core.security import create_access_token, hash_password, verify_password
 from app.database import get_db
 from app.models.user import User
@@ -24,7 +25,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user",
 )
+@limiter.limit("3/minute")
 def register_user(
+    request: Request,
     payload: RegisterRequest,
     db: Session = Depends(get_db),
 ):
@@ -74,7 +77,9 @@ def register_user(
     response_model=UserResponse,
     summary="Log in user and issue HttpOnly session cookie",
 )
+@limiter.limit("5/minute")
 def login_user(
+    request: Request,
     payload: LoginRequest,
     response: Response,
     db: Session = Depends(get_db),

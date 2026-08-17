@@ -178,3 +178,103 @@ def test_document_upload_and_tenant_isolation(client):
     assert res_file2.status_code == 404
     assert res_file2.json()["detail"] == "Document not found"
 
+
+def test_retry_document_processing(client):
+    """
+    REQ-REL-01: Test POST /api/v1/documents/{id}/retry behavior.
+    - Resets FAILED document to QUEUED
+    - Clears pre-existing chunks
+    - Rejects retrying non-FAILED document with HTTP 400
+    - Enforces tenant isolation (HTTP 404)
+    """
+    import uuid
+    from app.models.document import Document
+    from app.models.document_chunk import DocumentChunk
+    from app.models.processing_job import ProcessingJob
+
+    # 1. Register & Login User 1
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "retry_u1@example.com", "password": "password123"},
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "retry_u1@example.com", "password": "password123"},
+    )
+
+    # 2. Create Company
+    res_comp = client.post(
+        "/api/v1/companies",
+        json={"name": "Retry Corp", "industry": "Tech"},
+    )
+    comp_id = res_comp.json()["id"]
+
+    # 3. Upload Document
+    valid_pdf_bytes = b"%PDF-1.7 header\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF"
+    pdf_file = ("Retry_Test.pdf", valid_pdf_bytes, "application/pdf")
+    res_upload = client.post(
+        f"/api/v1/companies/{comp_id}/documents",
+        files={"file": pdf_file},
+    )
+    doc_id = res_upload.json()["id"]
+
+    # 4. Simulate a failed processing state in database directly
+    db_gen = app.dependency_overrides[get_db]()
+    db = next(db_gen)
+
+    doc_obj = db.query(Document).filter(Document.id == uuid.UUID(doc_id)).first()
+    doc_obj.status = "FAILED"
+
+    job_obj = db.query(ProcessingJob).filter(ProcessingJob.document_id == uuid.UUID(doc_id)).first()
+    if job_obj:
+        job_obj.status = "FAILED"
+        job_obj.error_message = "Simulated extraction crash"
+
+    # Add a dummy orphaned chunk
+    dummy_chunk = DocumentChunk(
+        id=uuid.uuid4(),
+        document_id=doc_obj.id,
+        company_id=doc_obj.company_id,
+        chunk_index=0,
+        page_number=1,
+        text="Partial chunk from failed run",
+    )
+    db.add(dummy_chunk)
+    db.commit()
+
+    # Check chunk exists
+    assert db.query(DocumentChunk).filter(DocumentChunk.document_id == doc_obj.id).count() == 1
+
+    # 5. Execute POST /api/v1/documents/{doc_id}/retry
+    res_retry = client.post(f"/api/v1/documents/{doc_id}/retry")
+    assert res_retry.status_code == 200
+    retry_data = res_retry.json()
+    assert retry_data["status"] == "QUEUED"
+
+    # Verify orphaned chunk was deleted
+    assert db.query(DocumentChunk).filter(DocumentChunk.document_id == uuid.UUID(doc_id)).count() == 0
+
+    # 6. Attempt retry on a non-FAILED (e.g. COMPLETED) document -> MUST return 400 Bad Request
+    doc_obj = db.query(Document).filter(Document.id == uuid.UUID(doc_id)).first()
+    doc_obj.status = "COMPLETED"
+    db.commit()
+
+    res_retry_again = client.post(f"/api/v1/documents/{doc_id}/retry")
+    assert res_retry_again.status_code == 400
+    assert "Only failed documents can be retried" in res_retry_again.json()["detail"]
+
+    # 7. Register & Login User 2, attempt to retry User 1's document -> MUST return 404 Not Found
+    client.post("/api/v1/auth/logout")
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "retry_u2@example.com", "password": "password123"},
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "retry_u2@example.com", "password": "password123"},
+    )
+
+    res_retry_u2 = client.post(f"/api/v1/documents/{doc_id}/retry")
+    assert res_retry_u2.status_code == 404
+    assert res_retry_u2.json()["detail"] == "Document not found"
+

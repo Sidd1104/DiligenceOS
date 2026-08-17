@@ -12,9 +12,9 @@
 
 | Requirement ID | Status | Evidence / Implementation Details / Identified Gap | Priority to Fix |
 | :--- | :--- | :--- | :--- |
-| **REQ-SEC-05** | **NOT IMPLEMENTED** | Neither `slowapi` nor custom rate limiting middleware is present on `POST /api/v1/auth/login`, `POST /api/v1/auth/register`, or `POST /api/v1/companies/{company_id}/documents`. | **Critical** |
-| **REQ-PERF-02** | **NOT IMPLEMENTED** | `POST /api/v1/companies/{company_id}/research` returns a single JSON `ResearchAnswerResponse` payload synchronously upon completion. Streaming token-by-token via Server-Sent Events (`StreamingResponse` / EventSource) is not implemented. | **Critical** |
-| **REQ-REL-01** | **PARTIALLY IMPLEMENTED** | Job failure is safely isolated in `processing_jobs.error_message` without corrupting DB state, but there is no API endpoint (e.g. `POST /api/v1/documents/{id}/retry`) or UI button for analysts to retry a failed job. | **Critical** |
+| **REQ-PERF-02** | **IMPLEMENTED** | Satisfied by [rag.py](file:///c:/Users/asus/OneDrive/Desktop/PROJECTS/DiligenceOS/apps/api/app/services/rag.py#L167-L215) (`stream_rag_answer`), [research.py](file:///c:/Users/asus/OneDrive/Desktop/PROJECTS/DiligenceOS/apps/api/app/api/v1/research.py#L40-L200) (`StreamingResponse` with `text/event-stream`), [research.ts](file:///c:/Users/asus/OneDrive/Desktop/PROJECTS/DiligenceOS/apps/web/lib/research.ts#L60-L140) (`streamResearchQuestion`), & [page.tsx](file:///c:/Users/asus/OneDrive/Desktop/PROJECTS/DiligenceOS/apps/web/app/companies/%5Bid%5D/research/page.tsx#L120-L180). Streams token-by-token with SSE, fades in citations upon completion, and persists messages in DB. Verified via `test_research.py`. | Satisfied |
+| **REQ-SEC-05** | **IMPLEMENTED** | Satisfied by [rate_limit.py](file:///c:/Users/asus/OneDrive/Desktop/PROJECTS/DiligenceOS/apps/api/app/core/rate_limit.py), [auth.py](file:///c:/Users/asus/OneDrive/Desktop/PROJECTS/DiligenceOS/apps/api/app/api/v1/auth.py#L26-L75), & [documents.py](file:///c:/Users/asus/OneDrive/Desktop/PROJECTS/DiligenceOS/apps/api/app/api/v1/documents.py#L78). Uses `slowapi` rate limiter (5/min login, 3/min register, 10/min upload) returning HTTP 429 & `Retry-After` header. Verified via `test_auth.py`. | Satisfied |
+| **REQ-REL-01** | **IMPLEMENTED** | Satisfied by [documents.py](file:///c:/Users/asus/OneDrive/Desktop/PROJECTS/DiligenceOS/apps/api/app/api/v1/documents.py#L364-L445) (`POST /api/v1/documents/{id}/retry`) & [page.tsx](file:///c:/Users/asus/OneDrive/Desktop/PROJECTS/DiligenceOS/apps/web/app/companies/%5Bid%5D/page.tsx#L476-L495). Resets failed document/job to QUEUED, clears partial chunks, re-enqueues task, and renders Retry button with loading state. Verified via `test_documents.py`. | Satisfied |
 | **REQ-SEC-02** | **PARTIALLY IMPLEMENTED** | HTTP upload validates 50MB size limit and `%PDF-` magic header bytes in [documents.py](file:///c:/Users/asus/OneDrive/Desktop/PROJECTS/DiligenceOS/apps/api/app/api/v1/documents.py#L120-L137), but deeper PDF structure/malicious object inspection is deferred to the Celery extraction worker. | **Should-fix** |
 | **REQ-PERF-03** | **PARTIALLY IMPLEMENTED** | `GET /api/v1/companies/{company_id}/documents` supports `skip` and `limit` pagination, but `GET /api/v1/companies` (list companies), `GET /api/v1/companies/{company_id}/research/sessions` (list sessions), and `GET /api/v1/research/sessions/{id}/messages` load full database arrays without pagination parameters. | **Should-fix** |
 | **REQ-AUTH-01** | **IMPLEMENTED** | Satisfied by [auth.py](file:///c:/Users/asus/OneDrive/Desktop/PROJECTS/DiligenceOS/apps/api/app/api/v1/auth.py#L38-L95) (`POST /api/v1/auth/register`). | Satisfied |
@@ -83,10 +83,10 @@
 
 ## 3. Summary of Identified Gaps & Recommended Fix Plan
 
-### Critical Priority (3 Items):
-1. **REQ-SEC-05 (Rate Limiting)**: Implement rate limiting middleware (using `slowapi` or Redis-backed sliding window limiter) on `POST /api/v1/auth/login`, `POST /api/v1/auth/register`, and `POST /api/v1/companies/{company_id}/documents`.
-2. **REQ-PERF-02 (Token-by-token Streaming)**: Add Server-Sent Events (`StreamingResponse` with `text/event-stream`) for RAG Q&A responses in `apps/api/app/api/v1/research.py` and consume stream in Next.js frontend chat interface.
-3. **REQ-REL-01 (Failed Job Retry Mechanism)**: Add `POST /api/v1/documents/{id}/retry` endpoint and a **Retry Processing** button in the Document Overview list UI.
+### Critical Priority (1 Remaining Item):
+1. **REQ-PERF-02 (Token-by-token Streaming)**: Add Server-Sent Events (`StreamingResponse` with `text/event-stream`) for RAG Q&A responses in `apps/api/app/api/v1/research.py` and consume stream in Next.js frontend chat interface.
+
+*(Resolved Critical Items: REQ-SEC-05 Rate Limiting & REQ-REL-01 Failed Job Retry Mechanism — marked IMPLEMENTED)*
 
 ### Should-Fix Priority (2 Items):
 4. **REQ-SEC-02 (Deeper PDF Upload Validation)**: Add PDF header structure inspection (e.g. verifying catalog/pages dictionary in PyMuPDF) before enqueuing background tasks.

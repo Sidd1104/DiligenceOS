@@ -32,6 +32,7 @@ import {
   askResearchQuestion,
   fetchCompanySessions,
   fetchSessionMessages,
+  streamResearchQuestion,
   CitationItem,
   ResearchMessageItem,
   ResearchSessionItem,
@@ -115,7 +116,7 @@ export default function ResearchPage() {
     setMessages([]);
   };
 
-  // Submit question
+  // Submit question with token-by-token streaming
   const handleSubmitQuestion = async (e?: React.FormEvent, customQuestion?: string) => {
     if (e) e.preventDefault();
     const queryText = customQuestion || question;
@@ -126,9 +127,11 @@ export default function ResearchPage() {
     setSending(true);
     setError(null);
 
-    // Optimistically add user message to UI
+    const tempUserMsgId = "user-" + Date.now();
+    const tempAssistantMsgId = "assistant-" + Date.now();
+
     const tempUserMsg: ResearchMessageItem = {
-      id: "temp-user-" + Date.now(),
+      id: tempUserMsgId,
       session_id: activeSessionId || "new",
       role: "user",
       content: currentQ,
@@ -136,28 +139,57 @@ export default function ResearchPage() {
       citations: [],
     };
 
-    setMessages((prev) => [...prev, tempUserMsg]);
+    const tempAssistantMsg: ResearchMessageItem = {
+      id: tempAssistantMsgId,
+      session_id: activeSessionId || "new",
+      role: "assistant",
+      content: "",
+      created_at: new Date().toISOString(),
+      citations: [],
+    };
+
+    setMessages((prev) => [...prev, tempUserMsg, tempAssistantMsg]);
 
     try {
-      const res = await askResearchQuestion(companyId, currentQ, activeSessionId || undefined);
-      
-      if (!activeSessionId) {
-        setActiveSessionId(res.session_id);
-        // Refresh session list
-        const updatedSessions = await fetchCompanySessions(companyId).catch(() => []);
-        setSessions(updatedSessions);
-      }
+      await streamResearchQuestion(
+        companyId,
+        currentQ,
+        activeSessionId || undefined,
+        (textDelta) => {
+          // Token streaming delta callback
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === tempAssistantMsgId
+                ? { ...msg, content: msg.content + textDelta }
+                : msg
+            )
+          );
+        },
+        async (doneData) => {
+          // Streaming finished callback — update message ID, session, and attach citations
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === tempAssistantMsgId
+                ? {
+                    ...msg,
+                    id: doneData.message_id,
+                    session_id: doneData.session_id,
+                    citations: doneData.citations || [],
+                  }
+                : msg
+            )
+          );
 
-      const assistantMsg: ResearchMessageItem = {
-        id: res.message_id,
-        session_id: res.session_id,
-        role: "assistant",
-        content: res.answer,
-        created_at: new Date().toISOString(),
-        citations: res.citations || [],
-      };
-
-      setMessages((prev) => [...prev.filter((m) => m.id !== tempUserMsg.id), tempUserMsg, assistantMsg]);
+          if (!activeSessionId) {
+            setActiveSessionId(doneData.session_id);
+            const updatedSessions = await fetchCompanySessions(companyId).catch(() => []);
+            setSessions(updatedSessions);
+          }
+        },
+        (errDetail) => {
+          setError(errDetail || "Failed to get AI research answer");
+        }
+      );
     } catch (err: any) {
       setError(err.message || "Failed to get AI research answer");
     } finally {

@@ -9,6 +9,7 @@ Provides:
 All routes are protected by `get_current_user` and enforce strict workspace tenant isolation.
 """
 
+from datetime import datetime, timezone
 from typing import List
 from uuid import UUID, uuid4
 
@@ -18,6 +19,7 @@ from fastapi import (
     Depends,
     File,
     HTTPException,
+    Request,
     UploadFile,
     status,
 )
@@ -25,9 +27,11 @@ from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.core.rate_limit import get_user_or_ip_key, limiter
 from app.database import get_db
 from app.models.company import Company
 from app.models.document import Document
+from app.models.document_chunk import DocumentChunk
 from app.models.processing_job import ProcessingJob
 from app.models.user import User
 from app.schemas.document import DocumentResponse, DocumentUrlResponse
@@ -78,7 +82,9 @@ def build_document_response(doc: Document, db: Session) -> DocumentResponse:
     status_code=status.HTTP_202_ACCEPTED,
     summary="Upload a PDF document to a company workspace",
 )
+@limiter.limit("10/minute", key_func=get_user_or_ip_key)
 async def upload_document(
+    request: Request,
     company_id: UUID,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
@@ -353,4 +359,94 @@ def get_document_file(
         )
 
     return Response(content=pdf_bytes, media_type="application/pdf")
+
+
+@router.post(
+    "/documents/{id}/retry",
+    response_model=DocumentResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Retry background processing for a failed document",
+)
+def retry_document_processing(
+    id: UUID,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Resets document and processing_jobs status to QUEUED and re-enqueues extraction task.
+    Only permitted if current document status is FAILED (returns 400 Bad Request otherwise).
+    Enforces hard workspace tenant isolation (returns 404 if not found or unauthorized).
+    Clears any partial/orphaned document_chunks before re-enqueuing.
+    """
+    if not current_user.workspace:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    # 1. Enforce hard workspace tenant isolation boundary
+    document = (
+        db.query(Document)
+        .join(Company)
+        .filter(
+            Document.id == id,
+            Company.workspace_id == current_user.workspace.id,
+        )
+        .first()
+    )
+
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    # 2. Reject if document is not in FAILED state (REQ-REL-01)
+    if document.status != "FAILED":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only failed documents can be retried",
+        )
+
+    # 3. Clear partial or orphaned document_chunks rows for this document
+    db.query(DocumentChunk).filter(DocumentChunk.document_id == id).delete()
+
+    # 4. Reset document status
+    now = datetime.now(timezone.utc)
+    document.status = "QUEUED"
+    document.updated_at = now
+
+    # 5. Fetch or create ProcessingJob and reset status
+    job = (
+        db.query(ProcessingJob)
+        .filter(ProcessingJob.document_id == id)
+        .order_by(ProcessingJob.created_at.desc())
+        .first()
+    )
+
+    if not job:
+        job = ProcessingJob(
+            document_id=id,
+            job_type="EXTRACTION",
+            status="QUEUED",
+        )
+        db.add(job)
+    else:
+        job.status = "QUEUED"
+        job.error_message = None
+        job.started_at = None
+        job.completed_at = None
+
+    db.commit()
+    db.refresh(document)
+
+    # 6. Re-enqueue processing task (Celery task or background task fallback)
+    try:
+        from workers.celery_app import celery_app
+        celery_app.send_task("diligenceos.process_document", args=[str(job.id)])
+    except Exception:
+        background_tasks.add_task(run_process_document_stub, str(job.id))
+
+    return build_document_response(document, db)
 
