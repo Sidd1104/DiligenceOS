@@ -1,85 +1,155 @@
-# DiligenceOS
+# DiligenceOS — Institutional Due Diligence Platform
 
-AI-powered due-diligence platform — upload company documents, get evidence-backed answers with citations.
+**DiligenceOS** is an AI-powered financial due diligence and institutional analysis platform. It enables investment analysts to upload complex corporate filings (annual reports, 10-K filings, pitch decks, financial statements), execute vector-grounded RAG (Retrieval-Augmented Generation) research queries, and receive real-time, token-streamed answers linked to exact PDF page citations.
 
-## Architecture
+---
+
+## Key Features
+
+- 🏢 **Multi-Tenant Company Workspaces**: Hard tenant boundary isolation for institutional client data and documents.
+- 📄 **Multi-Stage Document Extraction Pipeline**:
+  - Automated PDF validation & malware check.
+  - Page-level text extraction with PyMuPDF.
+  - Semantic chunking & vector embedding generation (pgvector cosine similarity).
+  - Background async execution with Celery & Redis.
+- ⚡ **AI Research Assistant with Token Streaming**:
+  - SSE-based real-time token streaming (`claude-sonnet-4-6`).
+  - **Radar Retrieval Animation**: Live status during chunk search (*"Searching N chunks across M documents..."*).
+  - **Terminal-Style Streaming UX**: Blinking Sapphire Blue cursor (`▍`), soft word fade-in, smart auto-scroll pause/resume, and an amber **Stop Generating** control.
+  - **Interrupted Stream Recovery**: Inline amber interruption chip (`⚠ Response interrupted`) with a **Retry** action button.
+- 🎯 **Grounding & Grounded Citations**:
+  - Strict evidence-only system prompts preventing AI hallucinations (REQ-SEC-01).
+  - Automatic citation extraction with staggered entrance animations.
+  - Monospace telemetry metrics (*"1.4s · 6 sources reviewed"*).
+- 🔍 **Distinct "No Relevant Evidence" Handling (REQ-RAG-05)**:
+  - Specialized amber-tinted evidence card with `SearchX` icon to clearly highlight evidence gaps.
+- 📖 **Analyst PDF Document Viewer**:
+  - Page-accurate PDF document viewer with direct deep-link page jumping from citation pills.
+
+---
+
+## Tech Stack
+
+### Frontend (`apps/web/`)
+- **Framework**: Next.js (App Router, React, TypeScript)
+- **Styling**: Tailwind CSS, Vanilla CSS animations, Design Token System (`DESIGN.md`)
+- **Components**: Lucide Icons, Radix UI primitives / shadcn
+
+### Backend API (`apps/api/`)
+- **Framework**: FastAPI (Python 3.12, Uvicorn)
+- **Database & Vectors**: PostgreSQL 16 + `pgvector`
+- **ORM & Migrations**: SQLAlchemy + Alembic
+- **AI Integration**: Anthropic API (`claude-sonnet-4-6`) & Voyaging embeddings fallback
+
+### Workers & Infrastructure (`workers/` & `infrastructure/`)
+- **Task Queue**: Celery + Redis 7
+- **Orchestration**: Docker Compose
+
+---
+
+## Monorepo Architecture
 
 ```
-apps/web/        → Next.js (App Router) + TypeScript + Tailwind CSS + shadcn/ui
-apps/api/        → FastAPI + SQLAlchemy + Alembic + Pydantic
-workers/         → Celery worker (shares models with apps/api)
-infrastructure/  → Docker Compose configuration
-docs/            → Requirements & specification documents
+DiligenceOS/
+├── apps/
+│   ├── api/          → FastAPI backend service, schemas, RAG service & routes
+│   └── web/          → Next.js App Router frontend, streaming UI & citation viewer
+├── workers/          → Celery background task processing (PDF extraction & vector indexing)
+├── infrastructure/   → Docker Compose configuration & environment templates
+├── docs/             → System requirements (SRS), MVP specifications & API documentation
+├── DESIGN.md         → Institutional design system tokens (colors, typography, spacing)
+└── docker-compose.yml → Container orchestration
 ```
+
+---
 
 ## Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
-- Ports 3000, 5432, 6379, 8000 available
+- Available local ports: `3000`, `5432`, `6379`, `8000`
+
+---
 
 ## Quick Start
 
-1. **Clone the repository** and navigate to the project root.
+### 1. Clone & Configure Environment
 
-2. **Set up environment variables:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your real API keys
-   ```
+```bash
+git clone <repository-url>
+cd DiligenceOS
 
-3. **Start all services:**
-   ```bash
-   docker compose up --build
-   ```
+# Create environment file from template
+cp .env.example .env
+```
 
-   This starts:
-   | Service    | URL / Port            | Description                     |
-   |------------|-----------------------|---------------------------------|
-   | **web**    | http://localhost:3000  | Next.js frontend                |
-   | **api**    | http://localhost:8000  | FastAPI backend                 |
-   | **postgres** | localhost:5432      | PostgreSQL 16 + pgvector        |
-   | **redis**  | localhost:6379        | Redis 7 (cache + job queue)     |
-   | **worker** | (background)          | Celery worker                   |
+Set your Anthropic API Key in `.env` (optional for local mock/dev mode):
+```env
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+```
 
-4. **Verify the health check:**
-   ```bash
-   curl http://localhost:8000/api/v1/health
-   # Should return: {"status":"ok"}
-   ```
+### 2. Start Services via Docker Compose
 
-5. **Verify the frontend:**
-   Open http://localhost:3000 in your browser. The home page should display the health check status fetched from the API.
+```bash
+docker compose down -v
+docker compose up --build
+```
 
-## Database
+### 3. Service Endpoints
 
-The database schema is managed via Alembic migrations. Migrations run automatically on API startup.
+| Service | Host URL | Description |
+|---|---|---|
+| **Web App** | [http://localhost:3000](http://localhost:3000) | Next.js Frontend |
+| **API Docs (Swagger)** | [http://localhost:8000/docs](http://localhost:8000/docs) | OpenAPI interactive documentation |
+| **API Health Check** | [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health) | Backend health check endpoint |
+| **PostgreSQL** | `localhost:5432` | PostgreSQL 16 with pgvector |
+| **Redis** | `localhost:6379` | Celery task queue & caching |
 
-To run migrations manually:
+---
+
+## Running Tests & Validation
+
+### Python API Unit & Integration Tests
+
+Run the full pytest suite inside the API virtual environment:
+```bash
+cd apps/api
+.venv\Scripts\python.exe -m pytest tests/ -v
+```
+
+*Includes 13 test suites covering authentication, tenant workspace isolation, document processing pipeline, prompt injection defense, and RAG streaming.*
+
+### Frontend TypeScript Check
+
+Validate frontend type safety:
+```bash
+cd apps/web
+npx tsc --noEmit
+```
+
+---
+
+## Database Migrations
+
+Alembic migrations run automatically on API container startup.
+
+To trigger manual upgrade:
 ```bash
 docker compose exec api alembic upgrade head
 ```
 
-To create a new migration after model changes:
+To generate a new migration:
 ```bash
-docker compose exec api alembic revision --autogenerate -m "description of changes"
+docker compose exec api alembic revision --autogenerate -m "descriptive message"
 ```
 
-## Project Status
+---
 
-**Current phase:** Repository foundation (scaffold only)
+## Project Milestones & Status
 
-- [x] Monorepo structure
-- [x] Docker Compose (Postgres + pgvector, Redis, API, Worker, Frontend)
-- [x] FastAPI health-check endpoint
-- [x] SQLAlchemy models + initial Alembic migration (full MVP schema)
-- [x] Next.js + Tailwind + shadcn/ui scaffold
-- [ ] Authentication
-- [ ] Document upload & processing
-- [ ] RAG-based AI Research
-- [ ] Citation viewer
-
-## Documentation
-
-- [MVP Requirements & Schema](docs/01-mvp-requirements-and-schema.md)
-- [Build Kit & Tech Prompts](docs/02-build-kit-tech-prompts-checklist.md)
-- [SRS — Requirements Specification](docs/03-SRS-requirements-specification.md)
+- [x] Monorepo scaffold & Docker orchestration
+- [x] Workspace tenant isolation & JWT Authentication
+- [x] PDF Extraction Pipeline (PyMuPDF, Chunking, pgvector embedding sync)
+- [x] Async background worker pipeline (Celery + Redis)
+- [x] AI Research RAG endpoint with SSE token streaming
+- [x] Grounded Citations mapping & PDF Document Viewer with page-jumping
+- [x] Refined Streaming UX (Radar retrieval, blinking cursor, word fade-in, smart auto-scroll, Stop/Retry actions, staggered citations, & no-evidence card styling)
