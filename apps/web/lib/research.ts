@@ -63,13 +63,15 @@ export async function streamResearchQuestion(
   sessionId: string | undefined,
   onTextDelta: (text: string) => void,
   onDone: (data: { session_id: string; message_id: string; citations: CitationItem[] }) => void,
-  onError: (error: string) => void
+  onError: (error: string, isAbort?: boolean) => void,
+  signal?: AbortSignal
 ): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/api/v1/companies/${companyId}/research`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question, session_id: sessionId }),
     credentials: "include",
+    signal,
   });
 
   if (!res.ok) {
@@ -136,7 +138,8 @@ export async function streamResearchQuestion(
       }
     }
   } catch (err: any) {
-    onError(err.message || "Error reading stream");
+    const isAbort = err?.name === "AbortError";
+    onError(err.message || "Error reading stream", isAbort);
   }
 }
 
