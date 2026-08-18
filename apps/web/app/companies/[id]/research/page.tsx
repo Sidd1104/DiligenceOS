@@ -534,24 +534,22 @@ export default function ResearchPage() {
                     {company?.name || "this company"}. Answers are grounded with exact document citations.
                   </p>
                 </div>
-                {processedDocsCount > 0 && (
-                  <div className="pt-4 space-y-3">
-                    <p className="text-[11px] font-medium text-[#94a3b8] uppercase tracking-wider font-mono">
-                      Suggested Research Queries
-                    </p>
-                    <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
-                      {SUGGESTED_QUERIES.map((chip, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleSubmitQuestion(undefined, chip)}
-                          className="rounded-full border border-white/10 bg-[#131b2e] px-3.5 py-1.5 text-xs text-[#f8fafc] hover:border-[#2563eb] hover:bg-[#1c273e] active:scale-95 transition-all shadow-xs"
-                        >
-                          {chip}
-                        </button>
-                      ))}
-                    </div>
+                <div className="pt-4 space-y-3">
+                  <p className="text-[11px] font-medium text-[#94a3b8] uppercase tracking-wider font-mono">
+                    Suggested Research Queries
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
+                    {SUGGESTED_QUERIES.map((chip, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSubmitQuestion(undefined, chip)}
+                        className="rounded-full border border-white/10 bg-[#131b2e] px-3.5 py-1.5 text-xs text-[#f8fafc] hover:border-[#2563eb] hover:bg-[#1c273e] active:scale-95 transition-all shadow-xs"
+                      >
+                        {chip}
+                      </button>
+                    ))}
                   </div>
-                )}
+                </div>
               </div>
             ) : (
               /* ── Message Thread ───────────────────────────────────────── */
@@ -806,19 +804,15 @@ export default function ResearchPage() {
                     handleSubmitQuestion();
                   }
                 }}
-                placeholder={
-                  processedDocsCount === 0
-                    ? "Upload documents first to start research..."
-                    : "Ask a question about financial results, risk factors, strategic goals..."
-                }
-                disabled={isStreaming || processedDocsCount === 0}
+                placeholder="Ask a question about financial results, risk factors, strategic goals..."
+                disabled={isStreaming}
                 className="min-h-[52px] max-h-32 resize-none pr-12 text-sm border-white/10 bg-[#080b14] text-[#f8fafc] placeholder:text-[#94a3b8]/50 focus-visible:border-[#2563eb] transition-colors"
                 rows={1}
               />
               <Button
                 type="submit"
                 size="icon"
-                disabled={isStreaming || !question.trim() || processedDocsCount === 0}
+                disabled={isStreaming || !question.trim()}
                 className="h-10 w-10 shrink-0 bg-[#2563eb] hover:bg-[#1d4ed8] active:scale-90 transition-all text-white disabled:opacity-40"
               >
                 <Send className="h-4 w-4" />
