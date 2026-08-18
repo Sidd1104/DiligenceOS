@@ -74,7 +74,6 @@ services:
     volumes:
       - ./apps/web:/app
       - /app/node_modules
-      - /app/.next
     depends_on:
       - api
 
