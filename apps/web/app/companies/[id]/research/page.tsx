@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { fetchCompany, Company } from "@/lib/companies";
 import { fetchCompanyDocuments, DocumentItem } from "@/lib/documents";
 import {
@@ -103,16 +104,6 @@ function RadarIndicator({ chunks, docs }: { chunks: number; docs: number }) {
         </div>
       </div>
     </div>
-  );
-}
-
-/** Blinking terminal cursor rendered at the end of streaming text */
-function StreamingCursor() {
-  return (
-    <span
-      className="inline-block ml-0.5 w-[2px] h-[1.1em] align-middle bg-[#d4af6a] animate-blink"
-      aria-hidden="true"
-    />
   );
 }
 
@@ -510,16 +501,22 @@ export default function ResearchPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#0a0a0d] text-[#f5f3ef]">
       {/* ── Header Bar ─────────────────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between border-b border-white/10 bg-[#0a0a0d]/95 px-6 backdrop-blur-md">
-        <div className="flex items-center gap-4">
+      <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center border-b border-white/10 bg-[#0a0a0d]/95 backdrop-blur-md">
+        <div className="w-72 shrink-0 border-r border-white/10 flex items-center px-4 sm:px-6 h-full hidden md:flex">
           <Link href={`/companies/${companyId}`}>
             <Button variant="ghost" size="sm" className="gap-2 text-[#9a968c] hover:text-[#f5f3ef]">
               <ArrowLeft className="h-4 w-4" />
               Back to Overview
             </Button>
           </Link>
-          <div className="h-4 w-px bg-white/10" />
-          <div className="flex items-center gap-2">
+        </div>
+        <div className="flex-1 flex items-center justify-between px-4 sm:px-6 h-full">
+          <div className="flex items-center gap-3">
+            <Link href={`/companies/${companyId}`} className="md:hidden">
+              <Button variant="ghost" size="sm" className="p-1.5 text-[#9a968c] hover:text-[#f5f3ef]">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
             <Brain className="h-5 w-5 text-[#d4af6a]" />
             <h1 className="font-semibold text-base font-heading text-[#f5f3ef]">AI Research Assistant</h1>
             {company && (
@@ -680,24 +677,7 @@ export default function ResearchPage() {
                       ) : (
                         /* Normal assistant bubble */
                         <div className="rounded-2xl rounded-tl-none border border-white/10 bg-[#15151c] px-5 py-3.5 text-sm leading-relaxed text-[#f5f3ef] shadow-sm">
-                          {isStreamingNow ? (
-                            /* Live streaming: word fade-in + blinking cursor */
-                            <p className="whitespace-pre-wrap">
-                              {(msg.chunks ?? []).map((chunk, i) => (
-                                <span
-                                  key={i}
-                                  className="animate-chunk-in inline"
-                                  style={{ animationDelay: `${Math.min(i * 8, 60)}ms` }}
-                                >
-                                  {chunk}
-                                </span>
-                              ))}
-                              <StreamingCursor />
-                            </p>
-                          ) : (
-                            /* Completed or loaded message */
-                            <p className="whitespace-pre-wrap">{msg.content}</p>
-                          )}
+                          <MarkdownRenderer content={msg.content} isStreaming={isStreamingNow} />
 
                           {/* Interrupted chip */}
                           {msg.isInterrupted && (
