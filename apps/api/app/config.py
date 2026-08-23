@@ -4,16 +4,22 @@ DiligenceOS API — Application configuration.
 Reads all settings from environment variables via Pydantic Settings.
 """
 
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Resolve path to project root .env
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_ROOT_ENV_FILE = _PROJECT_ROOT / ".env"
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "../.env", "../../.env", str(_ROOT_ENV_FILE)),
         env_file_encoding="utf-8",
         case_sensitive=False,
+        extra="ignore",
     )
 
     # ── Database ──────────────────────────────────────────────
