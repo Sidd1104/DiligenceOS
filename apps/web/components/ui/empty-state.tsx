@@ -25,31 +25,31 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center text-center p-8 rounded-xl border border-white/10 bg-[#131b2e]/50 backdrop-blur-md min-h-[240px]",
+        "flex flex-col items-center justify-center text-center p-8 rounded-xl border border-[rgba(245,243,239,0.08)] bg-[#15151c]/85 backdrop-blur-md min-h-[240px]",
         className
       )}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#2563eb]/10 text-[#2563eb] border border-[#2563eb]/20 shadow-xs mb-4">
-        <Icon className="h-6 w-6" />
+      <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[rgba(212,175,106,0.14)] text-[#d4af6a] border border-[rgba(212,175,106,0.28)] shadow-xs mb-5">
+        <Icon className="h-7 w-7" />
       </div>
-      <h3 className="text-base font-semibold text-[#f8fafc] font-heading tracking-tight">
+      <h3 className="text-lg font-semibold text-[#f5f3ef] font-heading tracking-tight">
         {title}
       </h3>
-      <p className="text-xs text-[#94a3b8] max-w-sm mt-1 mb-6 leading-relaxed">
+      <p className="text-xs text-[#9a968c] max-w-sm mt-1 mb-6 leading-relaxed">
         {description}
       </p>
       {actionLabel && (
         <div>
           {actionHref ? (
             <a href={actionHref}>
-              <Button className="h-9 px-4 text-xs font-medium bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-xs rounded-lg transition-all duration-150">
+              <Button className="h-9 px-5 text-xs font-semibold rounded-lg transition-all duration-150">
                 {actionLabel}
               </Button>
             </a>
           ) : (
             <Button
               onClick={onAction}
-              className="h-9 px-4 text-xs font-medium bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-xs rounded-lg transition-all duration-150"
+              className="h-9 px-5 text-xs font-semibold rounded-lg transition-all duration-150"
             >
               {actionLabel}
             </Button>

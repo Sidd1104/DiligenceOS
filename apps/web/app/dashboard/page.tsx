@@ -3,7 +3,19 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Building2, ArrowRight, LogOut, ShieldCheck, Sparkles, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  Building2,
+  ArrowRight,
+  LogOut,
+  ShieldCheck,
+  Sparkles,
+  AlertCircle,
+  FileText,
+  TrendingUp,
+  Presentation,
+  ClipboardList,
+} from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
 import { Company, fetchCompanies, createCompany } from "@/lib/companies";
@@ -104,7 +116,7 @@ export default function DashboardPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-screen items-center justify-center bg-transparent">
         <div className="flex flex-col items-center gap-3">
           <Skeleton className="h-10 w-10 rounded-full" />
           <Skeleton className="h-4 w-32" />
@@ -114,29 +126,29 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-[#f8fafc]">
+    <div className="relative z-2 min-h-screen text-[#f5f3ef]">
       {/* Top Header / Navigation Bar */}
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#0b0f19]/80 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-[rgba(245,243,239,0.08)] bg-[rgba(10,10,13,0.88)] backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563eb]/10 text-[#2563eb] border border-[#2563eb]/20 shadow-xs">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgba(212,175,106,0.14)] text-[#d4af6a] border border-[rgba(212,175,106,0.28)] shadow-xs">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
               <h1 className="text-base font-semibold tracking-tight font-heading">DiligenceOS</h1>
-              <p className="text-xs text-[#94a3b8] hidden sm:block">
+              <p className="text-xs text-[#9a968c] hidden sm:block">
                 Institutional Analyst Workspace
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 rounded-full border border-white/10 bg-[#131b2e] px-3 py-1 text-xs">
+            <div className="hidden md:flex items-center gap-2 rounded-full border border-[rgba(245,243,239,0.08)] bg-[#15151c] px-3 py-1 text-xs">
               <span className="h-2 w-2 rounded-full bg-[#10b981] animate-pulse" />
-              <span className="font-mono text-[#94a3b8]">{user.email}</span>
+              <span className="font-mono text-[#9a968c]">{user.email}</span>
             </div>
 
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-[#94a3b8] hover:text-[#f8fafc]">
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-[#9a968c] hover:text-[#f5f3ef]">
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">Logout</span>
             </Button>
@@ -146,51 +158,107 @@ export default function DashboardPage() {
 
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Telemetry Hero Section (Signature 3D Parallax Moment) */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#131b2e] via-[#0f1525] to-[#0b0f19] p-6 sm:p-8 shadow-xl">
-          <div className="absolute -right-12 -top-12 h-64 w-64 rounded-full bg-[#2563eb]/10 blur-3xl pointer-events-none" />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Telemetry Hero Section */}
+        <div className="relative overflow-hidden rounded-2xl border border-[rgba(245,243,239,0.08)] bg-gradient-to-br from-[rgba(21,21,28,0.92)] via-[rgba(16,16,21,0.95)] to-[rgba(10,10,13,0.98)] p-6 sm:p-8 shadow-xl backdrop-blur-md">
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2 max-w-xl">
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#2563eb]/10 px-3 py-1 text-xs font-mono text-[#2563eb] border border-[#2563eb]/20">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[rgba(212,175,106,0.14)] px-3 py-1 text-[11px] font-mono text-[#d4af6a] border border-[rgba(212,175,106,0.28)] uppercase tracking-wider">
                 <Sparkles className="h-3.5 w-3.5" />
-                <span>INSTITUTIONAL TELEMETRY</span>
+                <span>Institutional Telemetry</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight font-heading text-[#f8fafc]">
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight font-heading text-[#f5f3ef]">
                 Portfolio Due-Diligence Workspace
               </h2>
-              <p className="text-xs sm:text-sm text-[#94a3b8] leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#9a968c] leading-relaxed">
                 Evidence-backed financial analysis, page-accurate document extraction, and grounded AI research for investment professionals.
               </p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="rounded-xl border border-white/10 bg-[#080b14]/60 p-3.5 text-center backdrop-blur-xs">
-                <p className="text-[11px] font-medium text-[#94a3b8] uppercase tracking-wider">Entities</p>
-                <p className="text-2xl font-bold text-[#f8fafc] font-mono mt-0.5">{companies.length}</p>
+              <div className="rounded-xl border border-[rgba(245,243,239,0.08)] bg-[rgba(13,13,17,0.7)] p-4 text-center">
+                <p className="text-[11px] font-medium text-[#9a968c] uppercase tracking-wider">Entities</p>
+                <p className="text-2xl font-bold text-[#f5f3ef] font-mono mt-1">{companies.length}</p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-[#080b14]/60 p-3.5 text-center backdrop-blur-xs">
-                <p className="text-[11px] font-medium text-[#94a3b8] uppercase tracking-wider">Pipeline</p>
-                <p className="text-2xl font-bold text-[#10b981] font-mono mt-0.5">Active</p>
+              <div className="rounded-xl border border-[rgba(245,243,239,0.08)] bg-[rgba(13,13,17,0.7)] p-4 text-center">
+                <p className="text-[11px] font-medium text-[#9a968c] uppercase tracking-wider">Pipeline</p>
+                <p className="text-lg font-bold text-[#10b981] font-mono mt-1">Active</p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-[#080b14]/60 p-3.5 text-center backdrop-blur-xs col-span-2 sm:col-span-1">
-                <p className="text-[11px] font-medium text-[#94a3b8] uppercase tracking-wider">Embeddings</p>
-                <p className="text-2xl font-bold text-[#2563eb] font-mono mt-0.5">1024-d</p>
+              <div className="rounded-xl border border-[rgba(245,243,239,0.08)] bg-[rgba(13,13,17,0.7)] p-4 text-center col-span-2 sm:col-span-1">
+                <p className="text-[11px] font-medium text-[#9a968c] uppercase tracking-wider">Embeddings</p>
+                <p className="text-2xl font-bold text-[#d4af6a] font-mono mt-1">1024-d</p>
               </div>
             </div>
           </div>
         </div>
 
+        {/* ── Onboarding: How It Works ──────────────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          <div className="relative bg-[rgba(21,21,28,0.8)] backdrop-blur-md border border-[rgba(245,243,239,0.08)] rounded-xl p-5">
+            <div className="font-mono text-[11px] text-[#d4af6a] mb-2">01</div>
+            <h4 className="font-heading text-sm font-semibold text-[#f5f3ef] mb-1.5">Upload documents</h4>
+            <p className="text-xs text-[#9a968c] leading-relaxed">
+              Add a company&apos;s annual report, pitch deck, or financial statement as a PDF.
+            </p>
+            <span className="absolute right-[-11px] top-1/2 -translate-y-1/2 text-[#9a968c] z-10 hidden md:block">
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          </div>
+          <div className="relative bg-[rgba(21,21,28,0.8)] backdrop-blur-md border border-[rgba(245,243,239,0.08)] rounded-xl p-5">
+            <div className="font-mono text-[11px] text-[#d4af6a] mb-2">02</div>
+            <h4 className="font-heading text-sm font-semibold text-[#f5f3ef] mb-1.5">Automatic processing</h4>
+            <p className="text-xs text-[#9a968c] leading-relaxed">
+              The system extracts text, preserves page numbers, and indexes the content for search.
+            </p>
+            <span className="absolute right-[-11px] top-1/2 -translate-y-1/2 text-[#9a968c] z-10 hidden md:block">
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          </div>
+          <div className="bg-[rgba(21,21,28,0.8)] backdrop-blur-md border border-[rgba(245,243,239,0.08)] rounded-xl p-5">
+            <div className="font-mono text-[11px] text-[#d4af6a] mb-2">03</div>
+            <h4 className="font-heading text-sm font-semibold text-[#f5f3ef] mb-1.5">Ask & verify</h4>
+            <p className="text-xs text-[#9a968c] leading-relaxed">
+              Ask a question, get an answer grounded in the document — with a citation to the exact page.
+            </p>
+          </div>
+        </div>
+
+        {/* ── Accepted Document Types ──────────────────────────────────── */}
+        <div className="bg-[rgba(21,21,28,0.7)] backdrop-blur-md border border-[rgba(245,243,239,0.08)] rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <FileText className="h-4 w-4 text-[#d4af6a]" />
+            <h4 className="font-heading text-sm font-semibold text-[#f5f3ef]">What you can upload (PDF, up to 50MB)</h4>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="flex items-center gap-1.5 text-xs bg-[#0d0d11] border border-[rgba(245,243,239,0.08)] rounded-lg px-3 py-2 text-[#9a968c]">
+              <TrendingUp className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
+              Annual reports / 10-K
+            </span>
+            <span className="flex items-center gap-1.5 text-xs bg-[#0d0d11] border border-[rgba(245,243,239,0.08)] rounded-lg px-3 py-2 text-[#9a968c]">
+              <Presentation className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
+              Pitch decks
+            </span>
+            <span className="flex items-center gap-1.5 text-xs bg-[#0d0d11] border border-[rgba(245,243,239,0.08)] rounded-lg px-3 py-2 text-[#9a968c]">
+              <Plus className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
+              Financial statements
+            </span>
+            <span className="flex items-center gap-1.5 text-xs bg-[#0d0d11] border border-[rgba(245,243,239,0.08)] rounded-lg px-3 py-2 text-[#9a968c]">
+              <ClipboardList className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
+              Board decks / memos
+            </span>
+          </div>
+        </div>
+
         {/* Dashboard Title & Actions Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[rgba(245,243,239,0.08)] pb-6">
           <div>
-            <h3 className="text-xl font-semibold tracking-tight font-heading text-[#f8fafc]">Target Companies</h3>
-            <p className="text-xs text-[#94a3b8] mt-1">
+            <h3 className="text-xl font-semibold tracking-tight font-heading text-[#f5f3ef]">Target Companies</h3>
+            <p className="text-xs text-[#9a968c] mt-1">
               Select or create a company workspace to manage documents and run AI research.
             </p>
           </div>
 
-          <Button onClick={handleOpenDialog} className="gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-xs sm:self-auto self-start">
+          <Button onClick={handleOpenDialog} className="gap-2 sm:self-auto self-start">
             <Plus className="h-4 w-4" />
             New Company
           </Button>
@@ -230,13 +298,13 @@ export default function DashboardPage() {
           </div>
         ) : companies.length === 0 ? (
           /* Designed Empty State */
-          <div className="rounded-2xl border border-dashed p-12 text-center bg-card/50 flex flex-col items-center justify-center space-y-4 max-w-lg mx-auto my-8">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground">
+          <div className="rounded-2xl border border-[rgba(245,243,239,0.08)] p-14 text-center bg-[rgba(21,21,28,0.85)] backdrop-blur-md flex flex-col items-center justify-center space-y-5 max-w-lg mx-auto my-8">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[rgba(212,175,106,0.14)] text-[#d4af6a] border border-[rgba(212,175,106,0.28)]">
               <Building2 className="h-7 w-7" />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-semibold tracking-tight">No companies yet</h3>
-              <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold tracking-tight font-heading">No companies yet</h3>
+              <p className="text-sm text-[#9a968c] max-w-xs mx-auto leading-relaxed">
                 Get started by adding your first target company to analyze financials and documents.
               </p>
             </div>
@@ -250,34 +318,34 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {companies.map((company) => (
               <Link key={company.id} href={`/companies/${company.id}`} className="group block focus:outline-none">
-                <Card className="h-full flex flex-col justify-between border border-white/10 bg-[#131b2e] transition-all duration-150 hover:border-[#2563eb] hover:bg-[#1c273e]/70 hover:shadow-lg">
-                  <CardHeader className="space-y-2 pb-3 border-b border-white/5">
+                <Card className="h-full flex flex-col justify-between border border-[rgba(245,243,239,0.08)] bg-[#15151c] transition-all duration-150 hover:border-[rgba(212,175,106,0.28)] hover:bg-[#1c1c24]/70 hover:shadow-lg">
+                  <CardHeader className="space-y-2 pb-3 border-b border-[rgba(245,243,239,0.04)]">
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="font-heading text-base font-semibold text-[#f8fafc] group-hover:text-[#2563eb] transition-colors line-clamp-1">
+                      <CardTitle className="font-heading text-base font-semibold text-[#f5f3ef] group-hover:text-[#d4af6a] transition-colors line-clamp-1">
                         {company.name}
                       </CardTitle>
-                      <ArrowRight className="h-4 w-4 text-[#94a3b8] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      <ArrowRight className="h-4 w-4 text-[#9a968c] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0" />
                     </div>
                     {company.industry ? (
-                      <span className="inline-flex items-center rounded-full bg-[#2563eb]/10 px-2.5 py-0.5 text-xs font-mono text-[#2563eb] border border-[#2563eb]/20 w-fit">
+                      <span className="inline-flex items-center rounded-full bg-[rgba(212,175,106,0.14)] px-2.5 py-0.5 text-xs font-mono text-[#d4af6a] border border-[rgba(212,175,106,0.28)] w-fit">
                         {company.industry}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 text-xs font-mono text-[#94a3b8] border border-white/10 w-fit">
+                      <span className="inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 text-xs font-mono text-[#9a968c] border border-[rgba(245,243,239,0.08)] w-fit">
                         Unspecified Industry
                       </span>
                     )}
                   </CardHeader>
 
                   <CardContent className="py-4">
-                    <p className="text-xs text-[#94a3b8] line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-[#9a968c] line-clamp-2 leading-relaxed">
                       {company.description || "Institutional due-diligence & evidence retrieval workspace."}
                     </p>
                   </CardContent>
 
-                  <CardFooter className="border-t border-white/5 pt-3 text-[11px] text-[#94a3b8] flex justify-between items-center font-mono">
+                  <CardFooter className="border-t border-[rgba(245,243,239,0.04)] pt-3 text-[11px] text-[#9a968c] flex justify-between items-center font-mono">
                     <span>Added {new Date(company.created_at).toLocaleDateString()}</span>
-                    <span className="text-[#94a3b8]/70">
+                    <span className="text-[#9a968c]/70">
                       ID: {company.id.slice(0, 8)}...
                     </span>
                   </CardFooter>
@@ -301,15 +369,15 @@ export default function DashboardPage() {
 
             <div className="grid gap-4 py-4">
               {formError && (
-                <div className="rounded-lg bg-destructive/10 p-3 text-xs text-destructive flex items-center gap-2">
+                <div className="rounded-lg bg-[#ef4444]/10 p-3 text-xs text-[#ef4444] flex items-center gap-2 border border-[#ef4444]/20">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{formError}</span>
                 </div>
               )}
 
               <div className="grid gap-1.5">
-                <label htmlFor="name" className="text-xs font-medium">
-                  Company Name <span className="text-destructive">*</span>
+                <label htmlFor="name" className="text-xs font-medium text-[#9a968c]">
+                  Company Name <span className="text-[#ef4444]">*</span>
                 </label>
                 <Input
                   id="name"
@@ -322,7 +390,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="grid gap-1.5">
-                <label htmlFor="industry" className="text-xs font-medium">
+                <label htmlFor="industry" className="text-xs font-medium text-[#9a968c]">
                   Industry / Sector
                 </label>
                 <Input
@@ -334,7 +402,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="grid gap-1.5">
-                <label htmlFor="description" className="text-xs font-medium">
+                <label htmlFor="description" className="text-xs font-medium text-[#9a968c]">
                   Description
                 </label>
                 <Textarea

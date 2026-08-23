@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
+import { Starfield } from "@/components/ui/starfield";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -33,10 +34,10 @@ export default function RootLayout({
       lang="en"
       className={`dark ${outfit.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#0b0f19] text-[#f8fafc]">
+      <body className="min-h-full flex flex-col bg-[#0a0a0d] text-[#f5f3ef]">
+        <Starfield />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
 }
-

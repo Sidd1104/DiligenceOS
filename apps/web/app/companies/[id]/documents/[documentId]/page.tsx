@@ -146,29 +146,29 @@ export default function DocumentViewerPage({ params }: PageProps) {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-[#0b0f19] text-[#f8fafc] overflow-hidden">
+    <div className="flex h-screen flex-col bg-[#0a0a0d] text-[#f5f3ef] overflow-hidden">
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-[#0b0f19]/95 px-6 backdrop-blur">
+      <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-[#0a0a0d]/95 px-6 backdrop-blur">
         <div className="flex items-center gap-4 min-w-0">
           <Link href={`/companies/${companyId}`}>
-            <Button variant="ghost" size="sm" className="gap-2 text-[#94a3b8] hover:text-[#f8fafc]">
+            <Button variant="ghost" size="sm" className="gap-2 text-[#9a968c] hover:text-[#f5f3ef]">
               <ArrowLeft className="h-4 w-4" />
               <span className="hidden sm:inline">Overview</span>
             </Button>
           </Link>
           <div className="h-4 w-px bg-white/10" />
           <div className="flex items-center gap-2.5 min-w-0">
-            <FileText className="h-5 w-5 text-[#2563eb] shrink-0" />
+            <FileText className="h-5 w-5 text-[#d4af6a] shrink-0" />
             <div className="min-w-0">
-              <h1 className="font-semibold text-sm font-heading truncate text-[#f8fafc]" title={docItem?.filename || "Document Viewer"}>
+              <h1 className="font-semibold text-sm font-heading truncate text-[#f5f3ef]" title={docItem?.filename || "Document Viewer"}>
                 {docItem?.filename || "Document Viewer"}
               </h1>
-              <div className="flex items-center gap-2 text-[11px] text-[#94a3b8]">
-                {company && <span className="font-medium text-[#f8fafc]">{company.name}</span>}
+              <div className="flex items-center gap-2 text-[11px] text-[#9a968c]">
+                {company && <span className="font-medium text-[#f5f3ef]">{company.name}</span>}
                 {docItem?.document_type && (
                   <>
                     <span>•</span>
-                    <span className="uppercase tracking-wider font-mono text-[10px] text-[#2563eb]">
+                    <span className="uppercase tracking-wider font-mono text-[10px] text-[#d4af6a]">
                       {docItem.document_type.replace("_", " ")}
                     </span>
                   </>
@@ -180,11 +180,11 @@ export default function DocumentViewerPage({ params }: PageProps) {
 
         {/* Center Page Controls */}
         {pdfUrl && !loading && !error && (
-          <div className="flex items-center gap-2 bg-[#131b2e] p-1.5 rounded-xl border border-white/10 shadow-sm">
+          <div className="flex items-center gap-2 bg-[#15151c] p-1.5 rounded-xl border border-white/10 shadow-sm">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-[#94a3b8] hover:text-[#f8fafc]"
+              className="h-8 w-8 text-[#9a968c] hover:text-[#f5f3ef]"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage <= 1}
               title="Previous Page"
@@ -193,7 +193,7 @@ export default function DocumentViewerPage({ params }: PageProps) {
             </Button>
 
             <form onSubmit={handlePageInputSubmit} className="flex items-center gap-1.5 text-xs">
-              <span className="text-[#94a3b8] font-medium pl-1">Page</span>
+              <span className="text-[#9a968c] font-medium pl-1">Page</span>
               <input
                 type="number"
                 min={1}
@@ -201,15 +201,15 @@ export default function DocumentViewerPage({ params }: PageProps) {
                 value={pageInput}
                 onChange={(e) => setPageInput(e.target.value)}
                 onBlur={handlePageInputSubmit}
-                className="w-12 h-7 rounded-md border border-white/10 bg-[#080b14] px-1.5 text-center text-xs font-mono font-semibold text-[#f8fafc] focus:outline-none focus:border-[#2563eb]"
+                className="w-12 h-7 rounded-md border border-white/10 bg-[#0d0d11] px-1.5 text-center text-xs font-mono font-semibold text-[#f5f3ef] focus:outline-none focus:border-[#d4af6a]"
               />
-              <span className="text-[#94a3b8] font-medium pr-1">of <span className="font-mono">{totalPages}</span></span>
+              <span className="text-[#9a968c] font-medium pr-1">of <span className="font-mono">{totalPages}</span></span>
             </form>
 
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-[#94a3b8] hover:text-[#f8fafc]"
+              className="h-8 w-8 text-[#9a968c] hover:text-[#f5f3ef]"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
               title="Next Page"
@@ -222,30 +222,30 @@ export default function DocumentViewerPage({ params }: PageProps) {
         {/* Right Utility Buttons */}
         {pdfUrl && !loading && !error && (
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 bg-[#131b2e] p-1 rounded-lg border border-white/10 hidden md:flex">
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-[#94a3b8] hover:text-[#f8fafc]" onClick={handleZoomOut} title="Zoom Out">
+            <div className="flex items-center gap-1 bg-[#15151c] p-1 rounded-lg border border-white/10 hidden md:flex">
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-[#9a968c] hover:text-[#f5f3ef]" onClick={handleZoomOut} title="Zoom Out">
                 <ZoomOut className="h-3.5 w-3.5" />
               </Button>
-              <span className="text-[11px] font-mono w-12 text-center select-none font-semibold text-[#f8fafc]">
+              <span className="text-[11px] font-mono w-12 text-center select-none font-semibold text-[#f5f3ef]">
                 {Math.round(scale * 100)}%
               </span>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-[#94a3b8] hover:text-[#f8fafc]" onClick={handleZoomIn} title="Zoom In">
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-[#9a968c] hover:text-[#f5f3ef]" onClick={handleZoomIn} title="Zoom In">
                 <ZoomIn className="h-3.5 w-3.5" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-[#94a3b8] hover:text-[#f8fafc]" onClick={handleResetZoom} title="Reset Zoom">
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-[#9a968c] hover:text-[#f5f3ef]" onClick={handleResetZoom} title="Reset Zoom">
                 <Maximize2 className="h-3.5 w-3.5" />
               </Button>
             </div>
 
             <Link href={`/companies/${companyId}/research`}>
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs border-white/10 bg-[#131b2e] text-[#f8fafc] hover:bg-[#1c273e] hidden lg:flex">
-                <Sparkles className="h-3.5 w-3.5 text-[#2563eb]" />
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs border-white/10 bg-[#15151c] text-[#f5f3ef] hover:bg-[#1c1c24] hidden lg:flex">
+                <Sparkles className="h-3.5 w-3.5 text-[#d4af6a]" />
                 Ask AI Research
               </Button>
             </Link>
 
             <a href={pdfUrl} target="_blank" rel="noopener noreferrer" download={docItem?.filename || "document.pdf"}>
-              <Button size="sm" className="gap-1.5 text-xs bg-[#2563eb] hover:bg-[#1d4ed8] text-white">
+              <Button size="sm" className="gap-1.5 text-xs bg-[#d4af6a] hover:bg-[#e6c584] text-white">
                 <Download className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Open Original</span>
               </Button>
@@ -255,34 +255,34 @@ export default function DocumentViewerPage({ params }: PageProps) {
       </header>
 
       {/* Main Document Viewer Container */}
-      <main className="flex-1 bg-[#0b0f19] relative overflow-hidden flex flex-col items-center justify-center p-4">
+      <main className="flex-1 bg-[#0a0a0d] relative overflow-hidden flex flex-col items-center justify-center p-4">
         {loading ? (
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#2563eb]/10 text-[#2563eb] border border-[#2563eb]/20 shadow-inner">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#d4af6a]/10 text-[#d4af6a] border border-[#d4af6a]/20 shadow-inner">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
             <div className="space-y-1">
-              <h3 className="font-semibold text-base font-heading text-[#f8fafc]">Loading Document Viewer...</h3>
-              <p className="text-xs text-[#94a3b8]">Generating secure presigned URL and rendering PDF pages.</p>
+              <h3 className="font-semibold text-base font-heading text-[#f5f3ef]">Loading Document Viewer...</h3>
+              <p className="text-xs text-[#9a968c]">Generating secure presigned URL and rendering PDF pages.</p>
             </div>
           </div>
         ) : error ? (
-          <Card className="max-w-md w-full shadow-2xl border border-[#ef4444]/30 bg-[#131b2e] text-[#f8fafc]">
+          <Card className="max-w-md w-full shadow-2xl border border-[#ef4444]/30 bg-[#15151c] text-[#f5f3ef]">
             <CardContent className="pt-6 text-center space-y-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ef4444]/10 text-[#ef4444] border border-[#ef4444]/20 mx-auto">
                 <AlertCircle className="h-6 w-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-semibold text-base font-heading text-[#f8fafc]">Unable to Display Document</h3>
-                <p className="text-xs text-[#94a3b8] leading-relaxed">{error}</p>
+                <h3 className="font-semibold text-base font-heading text-[#f5f3ef]">Unable to Display Document</h3>
+                <p className="text-xs text-[#9a968c] leading-relaxed">{error}</p>
               </div>
               <div className="pt-2 flex justify-center gap-3">
                 <Link href={`/companies/${companyId}`}>
-                  <Button variant="outline" size="sm" className="border-white/10 bg-[#080b14] text-[#f8fafc]">
+                  <Button variant="outline" size="sm" className="border-white/10 bg-[#0d0d11] text-[#f5f3ef]">
                     Back to Company Overview
                   </Button>
                 </Link>
-                <Button size="sm" className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white" onClick={() => window.location.reload()}>
+                <Button size="sm" className="bg-[#d4af6a] hover:bg-[#e6c584] text-white" onClick={() => window.location.reload()}>
                   Retry
                 </Button>
               </div>
@@ -291,7 +291,7 @@ export default function DocumentViewerPage({ params }: PageProps) {
         ) : pdfUrl ? (
           <div className="w-full h-full flex flex-col items-center justify-center relative">
             <div
-              className="w-full h-full max-w-6xl bg-[#131b2e] rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col transition-transform duration-150 ease-out"
+              className="w-full h-full max-w-6xl bg-[#15151c] rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col transition-transform duration-150 ease-out"
               style={{
                 transform: `scale(${scale})`,
                 transformOrigin: "top center",

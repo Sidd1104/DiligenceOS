@@ -42,7 +42,7 @@ export default function RegisterPage() {
   if (loading) {
     return (
       <AuroraBackground className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#2563eb]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#d4af6a]" />
       </AuroraBackground>
     );
   }
@@ -53,20 +53,20 @@ export default function RegisterPage() {
       <div className="w-full max-w-md space-y-6">
         {/* Branding Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#2563eb]/10 text-[#2563eb] border border-[#2563eb]/20 shadow-xs mb-1">
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(212,175,106,0.14)] text-[#d4af6a] border border-[rgba(212,175,106,0.28)] shadow-xs mb-1">
             <ShieldCheck className="h-6 w-6" />
           </div>
           <h1 className="text-3xl font-semibold tracking-tight font-heading">DiligenceOS</h1>
-          <p className="text-xs text-[#94a3b8] max-w-xs mx-auto">
+          <p className="text-xs text-[#9a968c] max-w-xs mx-auto">
             Institutional due-diligence & evidence retrieval portal
           </p>
         </div>
 
         {/* Auth Card */}
-        <div className="rounded-2xl border border-white/10 bg-[#131b2e] p-8 shadow-xl backdrop-blur-md space-y-6">
+        <div className="rounded-2xl border border-[rgba(245,243,239,0.08)] bg-[rgba(21,21,28,0.9)] p-8 shadow-xl backdrop-blur-xl space-y-6">
           <div>
-            <h2 className="text-lg font-medium text-[#f8fafc]">Create enterprise account</h2>
-            <p className="text-xs text-[#94a3b8] mt-1">Set up your analyst workspace account</p>
+            <h2 className="text-lg font-medium text-[#f5f3ef]">Create enterprise account</h2>
+            <p className="text-xs text-[#9a968c] mt-1">Set up your analyst workspace account</p>
           </div>
 
           {error && (
@@ -78,28 +78,28 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label htmlFor="fullName" className="block text-xs font-medium text-[#94a3b8]">
+              <label htmlFor="fullName" className="block text-[11px] font-medium text-[#9a968c] uppercase tracking-wider">
                 Full Name (optional)
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-2.5 h-4 w-4 text-[#94a3b8]" />
+                <User className="absolute left-3 top-2.5 h-4 w-4 text-[#9a968c]" />
                 <input
                   id="fullName"
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Jane Doe"
-                  className="w-full rounded-lg border border-white/10 bg-[#080b14] pl-9 pr-3 py-2 text-sm text-[#f8fafc] placeholder:text-[#94a3b8]/50 outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]"
+                  className="w-full rounded-lg border border-[rgba(245,243,239,0.08)] bg-[#0d0d11] pl-9 pr-3 py-2.5 text-sm text-[#f5f3ef] placeholder:text-[#9a968c]/50 outline-none focus:border-[#d4af6a] focus:ring-1 focus:ring-[#d4af6a] transition-colors"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="email" className="block text-xs font-medium text-[#94a3b8]">
+              <label htmlFor="email" className="block text-[11px] font-medium text-[#9a968c] uppercase tracking-wider">
                 Work Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-[#94a3b8]" />
+                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-[#9a968c]" />
                 <input
                   id="email"
                   type="email"
@@ -107,17 +107,17 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="analyst@firm.com"
-                  className="w-full rounded-lg border border-white/10 bg-[#080b14] pl-9 pr-3 py-2 text-sm text-[#f8fafc] placeholder:text-[#94a3b8]/50 outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]"
+                  className="w-full rounded-lg border border-[rgba(245,243,239,0.08)] bg-[#0d0d11] pl-9 pr-3 py-2.5 text-sm text-[#f5f3ef] placeholder:text-[#9a968c]/50 outline-none focus:border-[#d4af6a] focus:ring-1 focus:ring-[#d4af6a] transition-colors"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="password" className="block text-xs font-medium text-[#94a3b8]">
+              <label htmlFor="password" className="block text-[11px] font-medium text-[#9a968c] uppercase tracking-wider">
                 Password (min 8 characters)
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-[#94a3b8]" />
+                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-[#9a968c]" />
                 <input
                   id="password"
                   type="password"
@@ -126,14 +126,14 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-lg border border-white/10 bg-[#080b14] pl-9 pr-3 py-2 text-sm text-[#f8fafc] placeholder:text-[#94a3b8]/50 outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]"
+                  className="w-full rounded-lg border border-[rgba(245,243,239,0.08)] bg-[#0d0d11] pl-9 pr-3 py-2.5 text-sm text-[#f5f3ef] placeholder:text-[#9a968c]/50 outline-none focus:border-[#d4af6a] focus:ring-1 focus:ring-[#d4af6a] transition-colors"
                 />
               </div>
             </div>
 
             <Button
               type="submit"
-              className="w-full h-10 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-medium text-sm rounded-lg shadow-sm gap-2 mt-2"
+              className="w-full h-10 text-sm rounded-lg shadow-sm gap-2 mt-2"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -150,10 +150,10 @@ export default function RegisterPage() {
             </Button>
           </form>
 
-          <div className="pt-2 border-t border-white/10 text-center">
-            <p className="text-xs text-[#94a3b8]">
+          <div className="pt-2 border-t border-[rgba(245,243,239,0.08)] text-center">
+            <p className="text-xs text-[#9a968c]">
               Already have an enterprise account?{" "}
-              <Link href="/login" className="font-semibold text-[#2563eb] hover:underline">
+              <Link href="/login" className="font-semibold text-[#d4af6a] hover:underline">
                 Log in
               </Link>
             </p>
@@ -163,4 +163,3 @@ export default function RegisterPage() {
     </AuroraBackground>
   );
 }
-

@@ -39,46 +39,46 @@
 }
 
 :root {
-  --background: #0b0f19;
-  --foreground: #f8fafc;
-  --card: #131b2e;
-  --card-foreground: #f8fafc;
-  --popover: #131b2e;
-  --popover-foreground: #f8fafc;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
+  --background: #0a0a0d;
+  --foreground: #f5f3ef;
+  --card: #15151c;
+  --card-foreground: #f5f3ef;
+  --popover: #15151c;
+  --popover-foreground: #f5f3ef;
+  --primary: #d4af6a;
+  --primary-foreground: #0a0a0d;
   --secondary: #10b981;
   --secondary-foreground: #003824;
-  --muted: #1c273e;
-  --muted-foreground: #94a3b8;
-  --accent: #1c273e;
-  --accent-foreground: #f8fafc;
+  --muted: #1c1c24;
+  --muted-foreground: #9a968c;
+  --accent: #1c1c24;
+  --accent-foreground: #f5f3ef;
   --destructive: #ef4444;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.12);
-  --ring: #2563eb;
+  --border: rgba(245, 243, 239, 0.08);
+  --input: rgba(245, 243, 239, 0.08);
+  --ring: #d4af6a;
   --radius: 0.5rem;
 }
 
 .dark {
-  --background: #0b0f19;
-  --foreground: #f8fafc;
-  --card: #131b2e;
-  --card-foreground: #f8fafc;
-  --popover: #131b2e;
-  --popover-foreground: #f8fafc;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
+  --background: #0a0a0d;
+  --foreground: #f5f3ef;
+  --card: #15151c;
+  --card-foreground: #f5f3ef;
+  --popover: #15151c;
+  --popover-foreground: #f5f3ef;
+  --primary: #d4af6a;
+  --primary-foreground: #0a0a0d;
   --secondary: #10b981;
   --secondary-foreground: #003824;
-  --muted: #1c273e;
-  --muted-foreground: #94a3b8;
-  --accent: #1c273e;
-  --accent-foreground: #f8fafc;
+  --muted: #1c1c24;
+  --muted-foreground: #9a968c;
+  --accent: #1c1c24;
+  --accent-foreground: #f5f3ef;
   --destructive: #ef4444;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.12);
-  --ring: #2563eb;
+  --border: rgba(245, 243, 239, 0.08);
+  --input: rgba(245, 243, 239, 0.08);
+  --ring: #d4af6a;
 }
 
 @layer base {
@@ -86,7 +86,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#0b0f19] text-[#f8fafc] antialiased;
+    @apply bg-[#0a0a0d] text-[#f5f3ef] antialiased;
     font-family: var(--font-inter), sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
@@ -94,51 +94,9 @@
   }
 }
 
-/* Ambient Aurora Drifting Animations */
-@keyframes aurora-slow {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(50px, 35px) scale(1.08);
-  }
-}
-
-@keyframes aurora-reverse {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(-40px, -30px) scale(1.06);
-  }
-}
-
-@keyframes aurora-pulse {
-  0%, 100% {
-    opacity: 0.15;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.25;
-    transform: scale(1.05);
-  }
-}
-
-.animate-aurora-slow {
-  animation: aurora-slow 50s ease-in-out infinite;
-}
-
-.animate-aurora-reverse {
-  animation: aurora-reverse 60s ease-in-out infinite;
-}
-
-.animate-aurora-pulse {
-  animation: aurora-pulse 40s ease-in-out infinite;
-}
-
 /* ─── Streaming UX Animations ─────────────────────────────────────────────── */
 
-/* Blinking cursor ▍ — terminal-style, Sapphire Blue */
+/* Blinking cursor ▍ — terminal-style, Champagne Gold */
 @keyframes blink {
   0%, 49% {
     opacity: 1;
@@ -207,5 +165,3 @@
 .animate-citation-in {
   animation: citation-in 220ms ease-out forwards;
 }
-
-

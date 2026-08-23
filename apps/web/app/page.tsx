@@ -20,17 +20,16 @@ export default function Home() {
   }, [user, loading, router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0b0f19] text-[#f8fafc]">
+    <div className="flex min-h-screen items-center justify-center bg-transparent text-[#f5f3ef]">
       <div className="flex flex-col items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#2563eb]/10 text-[#2563eb] border border-[#2563eb]/20">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(212,175,106,0.14)] text-[#d4af6a] border border-[rgba(212,175,106,0.28)]">
           <ShieldCheck className="h-6 w-6" />
         </div>
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin text-[#2563eb]" />
+        <div className="flex items-center gap-2 text-sm font-medium text-[#9a968c]">
+          <Loader2 className="h-4 w-4 animate-spin text-[#d4af6a]" />
           <span>Connecting to DiligenceOS workspace...</span>
         </div>
       </div>
     </div>
   );
 }
-
