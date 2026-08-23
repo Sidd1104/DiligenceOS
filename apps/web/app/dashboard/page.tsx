@@ -11,10 +11,9 @@ import {
   ShieldCheck,
   Sparkles,
   AlertCircle,
-  FileText,
-  TrendingUp,
-  Presentation,
-  ClipboardList,
+  ChevronDown,
+  HelpCircle,
+  X,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
@@ -40,6 +39,10 @@ export default function DashboardPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Collapsible onboarding state for returning users
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const [isBannerDismissed, setIsBannerDismissed] = useState<boolean>(false);
 
   // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
@@ -125,6 +128,38 @@ export default function DashboardPage() {
     );
   }
 
+  const renderThreeSteps = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+      <div className="relative bg-[rgba(21,21,28,0.8)] backdrop-blur-md border border-[rgba(245,243,239,0.08)] rounded-xl p-5">
+        <div className="font-mono text-[11px] text-[#d4af6a] mb-2">01</div>
+        <h4 className="font-heading text-sm font-semibold text-[#f5f3ef] mb-1.5">Upload documents</h4>
+        <p className="text-xs text-[#9a968c] leading-relaxed">
+          Add a company&apos;s annual report, pitch deck, or financial statement as a PDF.
+        </p>
+        <span className="absolute right-[-11px] top-1/2 -translate-y-1/2 text-[#9a968c] z-10 hidden md:block">
+          <ArrowRight className="h-4 w-4" />
+        </span>
+      </div>
+      <div className="relative bg-[rgba(21,21,28,0.8)] backdrop-blur-md border border-[rgba(245,243,239,0.08)] rounded-xl p-5">
+        <div className="font-mono text-[11px] text-[#d4af6a] mb-2">02</div>
+        <h4 className="font-heading text-sm font-semibold text-[#f5f3ef] mb-1.5">Automatic processing</h4>
+        <p className="text-xs text-[#9a968c] leading-relaxed">
+          The system extracts text, preserves page numbers, and indexes the content for search.
+        </p>
+        <span className="absolute right-[-11px] top-1/2 -translate-y-1/2 text-[#9a968c] z-10 hidden md:block">
+          <ArrowRight className="h-4 w-4" />
+        </span>
+      </div>
+      <div className="bg-[rgba(21,21,28,0.8)] backdrop-blur-md border border-[rgba(245,243,239,0.08)] rounded-xl p-5">
+        <div className="font-mono text-[11px] text-[#d4af6a] mb-2">03</div>
+        <h4 className="font-heading text-sm font-semibold text-[#f5f3ef] mb-1.5">Ask & verify</h4>
+        <p className="text-xs text-[#9a968c] leading-relaxed">
+          Ask a question, get an answer grounded in the document — with a citation to the exact page.
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="relative z-2 min-h-screen text-[#f5f3ef]">
       {/* Top Header / Navigation Bar */}
@@ -155,7 +190,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </header>
-
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -192,62 +226,44 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ── Onboarding: How It Works ──────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-          <div className="relative bg-[rgba(21,21,28,0.8)] backdrop-blur-md border border-[rgba(245,243,239,0.08)] rounded-xl p-5">
-            <div className="font-mono text-[11px] text-[#d4af6a] mb-2">01</div>
-            <h4 className="font-heading text-sm font-semibold text-[#f5f3ef] mb-1.5">Upload documents</h4>
-            <p className="text-xs text-[#9a968c] leading-relaxed">
-              Add a company&apos;s annual report, pitch deck, or financial statement as a PDF.
-            </p>
-            <span className="absolute right-[-11px] top-1/2 -translate-y-1/2 text-[#9a968c] z-10 hidden md:block">
-              <ArrowRight className="h-4 w-4" />
-            </span>
-          </div>
-          <div className="relative bg-[rgba(21,21,28,0.8)] backdrop-blur-md border border-[rgba(245,243,239,0.08)] rounded-xl p-5">
-            <div className="font-mono text-[11px] text-[#d4af6a] mb-2">02</div>
-            <h4 className="font-heading text-sm font-semibold text-[#f5f3ef] mb-1.5">Automatic processing</h4>
-            <p className="text-xs text-[#9a968c] leading-relaxed">
-              The system extracts text, preserves page numbers, and indexes the content for search.
-            </p>
-            <span className="absolute right-[-11px] top-1/2 -translate-y-1/2 text-[#9a968c] z-10 hidden md:block">
-              <ArrowRight className="h-4 w-4" />
-            </span>
-          </div>
-          <div className="bg-[rgba(21,21,28,0.8)] backdrop-blur-md border border-[rgba(245,243,239,0.08)] rounded-xl p-5">
-            <div className="font-mono text-[11px] text-[#d4af6a] mb-2">03</div>
-            <h4 className="font-heading text-sm font-semibold text-[#f5f3ef] mb-1.5">Ask & verify</h4>
-            <p className="text-xs text-[#9a968c] leading-relaxed">
-              Ask a question, get an answer grounded in the document — with a citation to the exact page.
-            </p>
-          </div>
-        </div>
+        {/* ── Onboarding Section Logic ──────────────────────────────────── */}
+        {/* Case A: Zero companies — render full 3-step onboarding strip */}
+        {companies.length === 0 ? (
+          renderThreeSteps()
+        ) : (
+          /* Case B: 1+ companies — render small, dismissible collapsed hint banner */
+          !isBannerDismissed && (
+            <div className="rounded-xl border border-[rgba(245,243,239,0.08)] bg-[rgba(21,21,28,0.75)] backdrop-blur-md overflow-hidden transition-all">
+              <div className="flex items-center justify-between px-4 py-3 text-xs">
+                <button
+                  onClick={() => setShowOnboarding(!showOnboarding)}
+                  className="flex items-center gap-2 text-[#9a968c] hover:text-[#f5f3ef] transition-colors text-left flex-1"
+                >
+                  <HelpCircle className="h-4 w-4 text-[#d4af6a] shrink-0" />
+                  <span className="font-medium text-[#f5f3ef]">New here? See how DiligenceOS works</span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-[#9a968c] transition-transform duration-200 ${
+                      showOnboarding ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                <button
+                  onClick={() => setIsBannerDismissed(true)}
+                  className="text-[#9a968c] hover:text-[#f5f3ef] p-1 rounded-md transition-colors ml-2"
+                  title="Dismiss guide"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
 
-        {/* ── Accepted Document Types ──────────────────────────────────── */}
-        <div className="bg-[rgba(21,21,28,0.7)] backdrop-blur-md border border-[rgba(245,243,239,0.08)] rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <FileText className="h-4 w-4 text-[#d4af6a]" />
-            <h4 className="font-heading text-sm font-semibold text-[#f5f3ef]">What you can upload (PDF, up to 50MB)</h4>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <span className="flex items-center gap-1.5 text-xs bg-[#0d0d11] border border-[rgba(245,243,239,0.08)] rounded-lg px-3 py-2 text-[#9a968c]">
-              <TrendingUp className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
-              Annual reports / 10-K
-            </span>
-            <span className="flex items-center gap-1.5 text-xs bg-[#0d0d11] border border-[rgba(245,243,239,0.08)] rounded-lg px-3 py-2 text-[#9a968c]">
-              <Presentation className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
-              Pitch decks
-            </span>
-            <span className="flex items-center gap-1.5 text-xs bg-[#0d0d11] border border-[rgba(245,243,239,0.08)] rounded-lg px-3 py-2 text-[#9a968c]">
-              <Plus className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
-              Financial statements
-            </span>
-            <span className="flex items-center gap-1.5 text-xs bg-[#0d0d11] border border-[rgba(245,243,239,0.08)] rounded-lg px-3 py-2 text-[#9a968c]">
-              <ClipboardList className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
-              Board decks / memos
-            </span>
-          </div>
-        </div>
+              {showOnboarding && (
+                <div className="p-4 pt-0 border-t border-[rgba(245,243,239,0.06)]">
+                  <div className="pt-3">{renderThreeSteps()}</div>
+                </div>
+              )}
+            </div>
+          )
+        )}
 
         {/* Dashboard Title & Actions Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[rgba(245,243,239,0.08)] pb-6">

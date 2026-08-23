@@ -17,6 +17,10 @@ import {
   HardDrive,
   RefreshCw,
   Brain,
+  TrendingUp,
+  Presentation,
+  ClipboardList,
+  Plus,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
@@ -345,6 +349,26 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {/* Document Type Helper Chips */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <span className="flex items-center gap-1.5 rounded-lg border border-[rgba(245,243,239,0.08)] bg-[#0d0d11] px-2.5 py-1.5 text-xs text-[#9a968c]">
+                        <TrendingUp className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
+                        <span>Annual reports / 10-K</span>
+                      </span>
+                      <span className="flex items-center gap-1.5 rounded-lg border border-[rgba(245,243,239,0.08)] bg-[#0d0d11] px-2.5 py-1.5 text-xs text-[#9a968c]">
+                        <Presentation className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
+                        <span>Pitch decks</span>
+                      </span>
+                      <span className="flex items-center gap-1.5 rounded-lg border border-[rgba(245,243,239,0.08)] bg-[#0d0d11] px-2.5 py-1.5 text-xs text-[#9a968c]">
+                        <Plus className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
+                        <span>Financial statements</span>
+                      </span>
+                      <span className="flex items-center gap-1.5 rounded-lg border border-[rgba(245,243,239,0.08)] bg-[#0d0d11] px-2.5 py-1.5 text-xs text-[#9a968c]">
+                        <ClipboardList className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
+                        <span>Board decks / memos</span>
+                      </span>
+                    </div>
+
                     {/* Error Banner */}
                     {uploadError && (
                       <div className="rounded-xl bg-[#ef4444]/10 p-3.5 text-xs text-[#ef4444] border border-[#ef4444]/20 flex items-start gap-2">
