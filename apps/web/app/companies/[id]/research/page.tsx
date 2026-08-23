@@ -19,6 +19,8 @@ import {
   Square,
   AlertTriangle,
   User,
+  Mic,
+  MicOff,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -170,6 +172,9 @@ export default function ResearchPage() {
   // Streaming state
   const [streamPhase, setStreamPhase] = useState<StreamPhase>("idle");
   const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
+  /** Voice input listening state */
+  const [isListening, setIsListening] = useState<boolean>(false);
+  const recognitionRef = useRef<{ stop: () => void } | null>(null);
   /** The message ID of the currently-streaming assistant bubble */
   const streamingMsgIdRef = useRef<string | null>(null);
   /** AbortController for the active fetch stream */
@@ -198,16 +203,87 @@ export default function ResearchPage() {
   }, []);
 
   const handleScroll = useCallback(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    const wasScrolledUp = userScrolledUpRef.current;
-    userScrolledUpRef.current = distanceFromBottom > 80;
-    // If user scrolled back to bottom, re-enable auto-scroll
-    if (wasScrolledUp && !userScrolledUpRef.current) {
-      // Already at bottom — nothing to scroll
-    }
+    if (!scrollContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    const isBottom = scrollHeight - scrollTop - clientHeight < 60;
+    userScrolledUpRef.current = !isBottom;
   }, []);
+
+  // ── Voice Input (Speech-to-Text) ──────────────────────────────────────────
+
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {
+          // Ignore stop errors
+        }
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const win = typeof window !== "undefined" ? (window as unknown as Record<string, unknown>) : {};
+    const SpeechClass = (win.SpeechRecognition || win.webkitSpeechRecognition) as {
+      new (): {
+        continuous: boolean;
+        interimResults: boolean;
+        lang: string;
+        onstart: () => void;
+        onresult: (event: { resultIndex: number; results: Array<Array<{ transcript: string }>> }) => void;
+        onerror: (event: { error: string }) => void;
+        onend: () => void;
+        start: () => void;
+        stop: () => void;
+      };
+    } | undefined;
+
+    if (!SpeechClass) {
+      setError("Speech recognition is not supported in this browser. Please try Google Chrome or Microsoft Edge.");
+      return;
+    }
+
+    try {
+      const recognition = new SpeechClass();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        setError(null);
+      };
+
+      recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        if (transcript) {
+          setQuestion((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        }
+      };
+
+      recognition.onerror = (event) => {
+        setIsListening(false);
+        if (event.error !== "no-speech") {
+          setError(`Microphone error: ${event.error}`);
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to access microphone";
+      setError(message);
+      setIsListening(false);
+    }
+  };
 
   // ── Initial data load ─────────────────────────────────────────────────────
 
@@ -564,6 +640,11 @@ export default function ResearchPage() {
                 const isLiveMsg = msg.id === streamingMsgId;
                 const isStreamingNow = isLiveMsg && streamPhase === "streaming";
 
+                // Hide empty assistant message bubble during retrieval phase
+                if (msg.role === "assistant" && !msg.content && streamPhase === "retrieving") {
+                  return null;
+                }
+
                 return (
                   <div
                     key={msg.id}
@@ -800,7 +881,7 @@ export default function ResearchPage() {
 
             <form
               onSubmit={(e) => handleSubmitQuestion(e)}
-              className="max-w-3xl mx-auto flex items-end gap-3 relative"
+              className="max-w-3xl mx-auto flex items-end gap-2 sm:gap-3 relative"
             >
               <Textarea
                 value={question}
@@ -816,6 +897,20 @@ export default function ResearchPage() {
                 className="min-h-[52px] max-h-32 resize-none pr-12 text-sm border-white/10 bg-[#0d0d11] text-[#f5f3ef] placeholder:text-[#9a968c]/50 focus-visible:border-[#d4af6a] transition-colors"
                 rows={1}
               />
+              <Button
+                type="button"
+                size="icon"
+                onClick={toggleVoiceInput}
+                disabled={isStreaming}
+                title={isListening ? "Stop listening" : "Voice input (Speak question)"}
+                className={`h-10 w-10 shrink-0 transition-all ${
+                  isListening
+                    ? "bg-[#ef4444] hover:bg-[#dc2626] text-white animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.5)]"
+                    : "bg-[#15151c] border border-white/10 hover:border-[#d4af6a] text-[#d4af6a] hover:bg-[#1c1c24]"
+                }`}
+              >
+                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
               <Button
                 type="submit"
                 size="icon"
