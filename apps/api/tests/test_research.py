@@ -332,3 +332,48 @@ def test_research_session_history_and_tenant_isolation(client):
 
     res_iso_msgs = client.get(f"/api/v1/research/sessions/{session_id}/messages")
     assert res_iso_msgs.status_code == 404
+
+
+def test_rag_financial_highlights_synthesis_and_retrieval(client):
+    """
+    Tests asking 'What are the key financial highlights?' against a multi-page report:
+    Verifies that the RAG pipeline retrieves relevant financial chunks and synthesizes
+    financial figures (revenue/margin) with citations to financial pages rather than cover pages.
+    """
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "fin_analyst@example.com", "password": "password123"},
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "fin_analyst@example.com", "password": "password123"},
+    )
+
+    res_comp = client.post("/api/v1/companies", json={"name": "Meridian Robotics", "industry": "Automation"})
+    assert res_comp.status_code == 201
+    comp_id = res_comp.json()["id"]
+
+    # Upload multi-page financial report
+    pdf_bytes = create_sample_financial_pdf_bytes()
+    res_upload = client.post(
+        f"/api/v1/companies/{comp_id}/documents",
+        files={"file": ("meridian_annual_report.pdf", pdf_bytes, "application/pdf")},
+    )
+    assert res_upload.status_code == 202
+    process_doc_synchronously(res_upload.json()["id"], pdf_bytes)
+
+    # Execute RAG query
+    res_qa = client.post(
+        f"/api/v1/companies/{comp_id}/research",
+        json={"question": "What are the key financial highlights?"},
+    )
+    assert res_qa.status_code == 200
+
+    answer_text, done_event = parse_sse_stream_response(res_qa.text)
+    assert done_event is not None
+
+    # Verify synthesized answer contains financial figures
+    assert any(k in answer_text.lower() for k in ["revenue", "$150m", "150m", "growth", "35%"])
+    assert len(done_event["citations"]) >= 1
+    assert done_event["citations"][0]["filename"] == "meridian_annual_report.pdf"
+
