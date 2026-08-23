@@ -499,9 +499,9 @@ export default function ResearchPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#0a0a0d] text-[#f5f3ef]">
+    <div className="flex h-screen max-h-screen flex-col bg-[#0a0a0d] text-[#f5f3ef] overflow-hidden">
       {/* ── Header Bar ─────────────────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center border-b border-white/10 bg-[#0a0a0d]/95 backdrop-blur-md">
+      <header className="flex h-16 shrink-0 items-center border-b border-white/10 bg-[#0a0a0d]/95 backdrop-blur-md z-50">
         <div className="w-72 shrink-0 border-r border-white/10 flex items-center px-4 sm:px-6 h-full hidden md:flex">
           <Link href={`/companies/${companyId}`}>
             <Button variant="ghost" size="sm" className="gap-2 text-[#9a968c] hover:text-[#f5f3ef]">
@@ -529,9 +529,9 @@ export default function ResearchPage() {
       </header>
 
       {/* ── Main Layout ────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden pt-16">
+      <div className="flex flex-1 overflow-hidden h-[calc(100vh-4rem)]">
         {/* Sessions Sidebar */}
-        <aside className="w-72 border-r border-white/10 bg-[#101015] flex flex-col hidden md:flex">
+        <aside className="w-72 h-full border-r border-white/10 bg-[#101015] flex flex-col shrink-0 hidden md:flex">
           <div className="p-4 border-b border-white/10">
             <Button
               onClick={handleNewSession}
@@ -571,7 +571,7 @@ export default function ResearchPage() {
         </aside>
 
         {/* Chat Main Window */}
-        <main className="flex-1 flex flex-col bg-[#0a0a0d] relative overflow-hidden">
+        <main className="flex-1 h-full flex flex-col justify-between bg-[#0a0a0d] relative overflow-hidden">
           {/* No processed documents warning */}
           {processedDocsCount === 0 && !loading && (
             <div className="bg-[#f59e0b]/10 border-b border-[#f59e0b]/20 px-6 py-3 flex items-center gap-3 text-xs text-[#f59e0b]">
@@ -843,8 +843,8 @@ export default function ResearchPage() {
             </div>
           )}
 
-          {/* ── Sticky Input Bar ────────────────────────────────────────────── */}
-          <div className="p-4 border-t border-white/10 bg-[#0a0a0d]">
+          {/* ── Statically Fixed Input Bar ───────────────────────────────────── */}
+          <div className="shrink-0 p-4 border-t border-white/10 bg-[#0a0a0d] z-40 shadow-2xl">
             {/* Stop generating button — visible only while stream is active */}
             {isStreaming && (
               <div className="max-w-3xl mx-auto mb-2 flex justify-center">
@@ -861,7 +861,7 @@ export default function ResearchPage() {
 
             <form
               onSubmit={(e) => handleSubmitQuestion(e)}
-              className="max-w-3xl mx-auto flex items-end gap-2 sm:gap-3 relative"
+              className="max-w-3xl mx-auto flex items-center gap-2.5 sm:gap-3 relative"
             >
               <Textarea
                 value={question}
@@ -874,7 +874,7 @@ export default function ResearchPage() {
                 }}
                 placeholder="Ask a question about financial results, risk factors, strategic goals..."
                 disabled={isStreaming}
-                className="min-h-[52px] max-h-32 resize-none pr-12 text-sm border-white/10 bg-[#0d0d11] text-[#f5f3ef] placeholder:text-[#9a968c]/50 focus-visible:border-[#d4af6a] transition-colors"
+                className="h-11 min-h-[44px] max-h-32 resize-none pr-4 text-sm border-white/10 bg-[#0d0d11] text-[#f5f3ef] placeholder:text-[#9a968c]/50 focus-visible:border-[#d4af6a] transition-colors py-2.5 rounded-xl"
                 rows={1}
               />
               <Button
@@ -883,7 +883,7 @@ export default function ResearchPage() {
                 onClick={toggleVoiceInput}
                 disabled={isStreaming}
                 title={isListening ? "Stop listening" : "Voice input (Speak question)"}
-                className={`h-10 w-10 shrink-0 transition-all ${
+                className={`h-11 w-11 shrink-0 rounded-xl transition-all ${
                   isListening
                     ? "bg-[#ef4444] hover:bg-[#dc2626] text-white animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.5)]"
                     : "bg-[#15151c] border border-white/10 hover:border-[#d4af6a] text-[#d4af6a] hover:bg-[#1c1c24]"
@@ -895,7 +895,7 @@ export default function ResearchPage() {
                 type="submit"
                 size="icon"
                 disabled={isStreaming || !question.trim()}
-                className="h-10 w-10 shrink-0 bg-[#d4af6a] hover:bg-[#e6c584] active:scale-90 transition-all text-white disabled:opacity-40"
+                className="h-11 w-11 shrink-0 rounded-xl bg-[#d4af6a] hover:bg-[#e6c584] active:scale-90 transition-all text-white disabled:opacity-40"
               >
                 <Send className="h-4 w-4" />
               </Button>
