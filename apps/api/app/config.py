@@ -32,7 +32,9 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me-in-production"
 
     # ── AI Providers ──────────────────────────────────────────
+    ai_provider: str = "gemini"  # "anthropic" or "gemini"
     anthropic_api_key: str = ""
+    gemini_api_key: str = ""
     voyage_api_key: str = ""
 
     # ── AWS / S3 ──────────────────────────────────────────────
