@@ -18,6 +18,7 @@ from app.config import settings
 from app.models.citation import Citation
 from app.models.document import Document
 from app.models.document_chunk import DocumentChunk
+from app.services.ai_provider import get_ai_provider, get_provider_api_key
 from app.services.embeddings import is_test_environment
 
 logger = logging.getLogger("diligenceos.rag")
@@ -240,7 +241,7 @@ def _synthesize_fallback_answer(question: str, chunks_info: List[dict]) -> str:
 
 def stream_rag_answer(question: str, chunks_info: List[dict]):
     """
-    Generator yielding text delta tokens from Anthropic API (claude-3-5-sonnet-20241022)
+    Generator yielding text delta tokens from configured AIProvider (Gemini or Anthropic)
     in streaming mode or simulated token stream for test/dev mode.
     """
     if not chunks_info:
@@ -248,13 +249,13 @@ def stream_rag_answer(question: str, chunks_info: List[dict]):
         return
 
     system_prompt, user_prompt = build_rag_prompt(question, chunks_info)
-    api_key = settings.anthropic_api_key
+    api_key = get_provider_api_key()
     in_test = is_test_environment()
 
     if in_test or not api_key or api_key.startswith("your-"):
         reason = "test environment" if in_test else ("no API key configured" if not api_key else "placeholder API key")
         logger.warning(
-            f"[RAG STREAM] ANTHROPIC API SKIPPED — reason: {reason}. "
+            f"[RAG STREAM] API SKIPPED — reason: {reason}. "
             f"Question: {question[:80]!r}. Serving degraded fallback response."
         )
         fallback_text = _synthesize_fallback_answer(question, chunks_info)
@@ -263,27 +264,18 @@ def stream_rag_answer(question: str, chunks_info: List[dict]):
             yield w + (" " if i < len(words) - 1 else "")
         return
 
-    logger.info(
-        f"[RAG STREAM] ANTHROPIC API CALL STARTING — model={CLAUDE_MODEL}, "
-        f"question={question[:80]!r}, chunks={len(chunks_info)}"
-    )
-
     try:
-        import anthropic
-
-        client = anthropic.Anthropic(api_key=api_key)
-        with client.messages.stream(
-            model=CLAUDE_MODEL,
-            max_tokens=1024,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}],
-        ) as stream:
-            for text_delta in stream.text_stream:
-                yield text_delta
-        logger.info(f"[RAG STREAM] ANTHROPIC API CALL SUCCEEDED — question={question[:80]!r}")
+        provider = get_ai_provider()
+        logger.info(
+            f"[RAG STREAM] {provider.provider_name} API CALL STARTING — model={provider.model_name}, "
+            f"question={question[:80]!r}, chunks={len(chunks_info)}"
+        )
+        for text_delta in provider.stream_answer(system_prompt, user_prompt):
+            yield text_delta
+        logger.info(f"[RAG STREAM] {provider.provider_name} API CALL SUCCEEDED — question={question[:80]!r}")
     except Exception as err:
         logger.error(
-            f"[RAG STREAM] ANTHROPIC API CALL FAILED — question={question[:80]!r}, "
+            f"[RAG STREAM] API CALL FAILED — question={question[:80]!r}, "
             f"error_type={type(err).__name__}, error={err}. "
             f"Serving degraded fallback response."
         )
@@ -293,46 +285,36 @@ def stream_rag_answer(question: str, chunks_info: List[dict]):
 
 def generate_rag_answer(question: str, chunks_info: List[dict]) -> str:
     """
-    Calls Anthropic API (claude-3-5-sonnet-20241022) to generate a grounded RAG response.
+    Calls configured AIProvider (Gemini or Anthropic) to generate a grounded RAG response.
     Includes a clearly-labeled degraded fallback for test environments or when API is unavailable.
     """
     if not chunks_info:
         return "Based on the provided documents, I could not find sufficient evidence to answer this query."
 
     system_prompt, user_prompt = build_rag_prompt(question, chunks_info)
-    api_key = settings.anthropic_api_key
+    api_key = get_provider_api_key()
     in_test = is_test_environment()
 
     if in_test or not api_key or api_key.startswith("your-"):
         reason = "test environment" if in_test else ("no API key configured" if not api_key else "placeholder API key")
         logger.warning(
-            f"[RAG GENERATE] ANTHROPIC API SKIPPED — reason: {reason}. "
+            f"[RAG GENERATE] API SKIPPED — reason: {reason}. "
             f"Question: {question[:80]!r}. Serving degraded fallback response."
         )
         return _synthesize_fallback_answer(question, chunks_info)
 
-    logger.info(
-        f"[RAG GENERATE] ANTHROPIC API CALL STARTING — model={CLAUDE_MODEL}, "
-        f"question={question[:80]!r}, chunks={len(chunks_info)}"
-    )
-
     try:
-        import anthropic
-
-        client = anthropic.Anthropic(api_key=api_key)
-        response = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=1024,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}],
+        provider = get_ai_provider()
+        logger.info(
+            f"[RAG GENERATE] {provider.provider_name} API CALL STARTING — model={provider.model_name}, "
+            f"question={question[:80]!r}, chunks={len(chunks_info)}"
         )
-        content_block = response.content[0]
-        answer = getattr(content_block, "text", str(content_block))
-        logger.info(f"[RAG GENERATE] ANTHROPIC API CALL SUCCEEDED — question={question[:80]!r}")
+        answer = provider.generate_answer(system_prompt, user_prompt)
+        logger.info(f"[RAG GENERATE] {provider.provider_name} API CALL SUCCEEDED — question={question[:80]!r}")
         return answer
     except Exception as err:
         logger.error(
-            f"[RAG GENERATE] ANTHROPIC API CALL FAILED — question={question[:80]!r}, "
+            f"[RAG GENERATE] API CALL FAILED — question={question[:80]!r}, "
             f"error_type={type(err).__name__}, error={err}. "
             f"Serving degraded fallback response."
         )

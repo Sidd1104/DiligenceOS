@@ -127,6 +127,7 @@ class GeminiProvider(AIProvider):
     """
 
     GEMINI_MODEL = "gemini-2.5-flash"
+    FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-3-flash-preview"]
 
     def __init__(self, api_key: str):
         self._api_key = api_key
@@ -139,47 +140,66 @@ class GeminiProvider(AIProvider):
     def model_name(self) -> str:
         return self.GEMINI_MODEL
 
-    def _build_contents(self, system_prompt: str, user_prompt: str):
-        """
-        Build the contents payload for the Gemini API.
-        Gemini uses a 'system_instruction' parameter for the system prompt
-        and a messages list for the user prompt.
-        """
-        return system_prompt, user_prompt
-
     def generate_answer(self, system_prompt: str, user_prompt: str) -> str:
         from google import genai
+        from google.genai.errors import ClientError
 
         client = genai.Client(api_key=self._api_key)
-        response = client.models.generate_content(
-            model=self.GEMINI_MODEL,
-            contents=user_prompt,
-            config=genai.types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                max_output_tokens=1024,
-                temperature=0.3,
-            ),
-        )
-        return response.text
+        models_to_try = [self.GEMINI_MODEL] + self.FALLBACK_MODELS
+
+        last_err = None
+        for m in models_to_try:
+            try:
+                response = client.models.generate_content(
+                    model=m,
+                    contents=user_prompt,
+                    config=genai.types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                        max_output_tokens=1024,
+                        temperature=0.3,
+                    ),
+                )
+                return response.text
+            except ClientError as e:
+                if e.code == 404:
+                    logger.warning(f"Gemini model '{m}' returned 404. Trying next model...")
+                    last_err = e
+                    continue
+                raise e
+        raise last_err
 
     def stream_answer(
         self, system_prompt: str, user_prompt: str
     ) -> Generator[str, None, None]:
         from google import genai
+        from google.genai.errors import ClientError
 
         client = genai.Client(api_key=self._api_key)
-        response_stream = client.models.generate_content_stream(
-            model=self.GEMINI_MODEL,
-            contents=user_prompt,
-            config=genai.types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                max_output_tokens=1024,
-                temperature=0.3,
-            ),
-        )
-        for chunk in response_stream:
-            if chunk.text:
-                yield chunk.text
+        models_to_try = [self.GEMINI_MODEL] + self.FALLBACK_MODELS
+
+        last_err = None
+        for m in models_to_try:
+            try:
+                response_stream = client.models.generate_content_stream(
+                    model=m,
+                    contents=user_prompt,
+                    config=genai.types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                        max_output_tokens=1024,
+                        temperature=0.3,
+                    ),
+                )
+                for chunk in response_stream:
+                    if chunk.text:
+                        yield chunk.text
+                return
+            except ClientError as e:
+                if e.code == 404:
+                    logger.warning(f"Gemini model '{m}' returned 404. Trying next model...")
+                    last_err = e
+                    continue
+                raise e
+        raise last_err
 
 
 def get_ai_provider() -> AIProvider:
