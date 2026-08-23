@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -13,10 +13,7 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
-  ExternalLink,
-  ShieldCheck,
   Download,
-  Building2,
   Sparkles,
 } from "lucide-react";
 
@@ -38,7 +35,8 @@ interface PageProps {
 export default function DocumentViewerPage({ params }: PageProps) {
   const { id: companyId, documentId } = use(params);
   const searchParams = useSearchParams();
-  const initialPage = parseInt(searchParams.get("page") || "1", 10);
+  const pageParam = parseInt(searchParams.get("page") || "1", 10);
+  const targetPage = pageParam > 0 ? pageParam : 1;
 
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -46,25 +44,23 @@ export default function DocumentViewerPage({ params }: PageProps) {
   const [company, setCompany] = useState<Company | null>(null);
   const [docItem, setDocItem] = useState<DocumentItem | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  
+
   // Navigation & Zoom States
-  const [currentPage, setCurrentPage] = useState<number>(initialPage > 0 ? initialPage : 1);
-  const [pageInput, setPageInput] = useState<string>(String(initialPage > 0 ? initialPage : 1));
+  const [currentPage, setCurrentPage] = useState<number>(targetPage);
+  const [pageInput, setPageInput] = useState<string>(String(targetPage));
   const [scale, setScale] = useState<number>(1.0);
-  const [useNativeViewer, setUseNativeViewer] = useState<boolean>(true);
+  const [prevTargetPage, setPrevTargetPage] = useState<number>(targetPage);
 
   // Loading & Error States
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Sync initial page if URL search parameter changes
-  useEffect(() => {
-    const pageParam = parseInt(searchParams.get("page") || "1", 10);
-    if (pageParam > 0) {
-      setCurrentPage(pageParam);
-      setPageInput(String(pageParam));
-    }
-  }, [searchParams]);
+  // Sync state during render if searchParams page parameter changes
+  if (prevTargetPage !== targetPage) {
+    setPrevTargetPage(targetPage);
+    setCurrentPage(targetPage);
+    setPageInput(String(targetPage));
+  }
 
   // Auth Redirect Guard
   useEffect(() => {
@@ -98,8 +94,9 @@ export default function DocumentViewerPage({ params }: PageProps) {
           resolvedUrl = `${apiBase}${resolvedUrl}`;
         }
         setPdfUrl(resolvedUrl);
-      } catch (err: any) {
-        setError(err.message || "Failed to load document for viewing.");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to load document for viewing.";
+        setError(message);
       } finally {
         setLoading(false);
       }

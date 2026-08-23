@@ -169,6 +169,7 @@ export default function ResearchPage() {
 
   // Streaming state
   const [streamPhase, setStreamPhase] = useState<StreamPhase>("idle");
+  const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
   /** The message ID of the currently-streaming assistant bubble */
   const streamingMsgIdRef = useRef<string | null>(null);
   /** AbortController for the active fetch stream */
@@ -229,8 +230,9 @@ export default function ResearchPage() {
           const initialMsgs = await fetchSessionMessages(firstSessionId).catch(() => []);
           setMessages(initialMsgs);
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load research assistant data");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to load research assistant data";
+        setError(message);
       } finally {
         setLoading(false);
       }
@@ -246,8 +248,9 @@ export default function ResearchPage() {
       const msgs = await fetchSessionMessages(sessionId);
       setMessages(msgs);
       scrollToBottom(true);
-    } catch (err: any) {
-      setError(err.message || "Failed to load session messages");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to load session messages";
+      setError(message);
     }
   };
 
@@ -301,6 +304,7 @@ export default function ResearchPage() {
       };
 
       streamingMsgIdRef.current = tempAssistantMsgId;
+      setStreamingMsgId(tempAssistantMsgId);
       responseStartRef.current = null;
 
       setMessages((prev) => [...prev, tempUserMsg, tempAssistantMsg]);
@@ -338,7 +342,6 @@ export default function ResearchPage() {
           // onDone
           async (doneData) => {
             const elapsedMs = responseStartRef.current ? Date.now() - responseStartRef.current : 0;
-            const noEvidence = doneData.citations.length === 0;
 
             // Update message with final ID, session, citations (hidden initially)
             setMessages((prev) =>
@@ -359,6 +362,7 @@ export default function ResearchPage() {
             );
 
             streamingMsgIdRef.current = null;
+            setStreamingMsgId(null);
             setStreamPhase("done");
 
             // Stagger: reveal citations after 260ms
@@ -404,13 +408,16 @@ export default function ResearchPage() {
               setError(errDetail || "Failed to get AI research answer");
             }
             streamingMsgIdRef.current = null;
+            setStreamingMsgId(null);
             setStreamPhase("idle");
           },
           controller.signal
         );
-      } catch (err: any) {
-        setError(err.message || "Failed to get AI research answer");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to get AI research answer";
+        setError(message);
         streamingMsgIdRef.current = null;
+        setStreamingMsgId(null);
         setStreamPhase("idle");
       } finally {
         abortControllerRef.current = null;
@@ -554,7 +561,7 @@ export default function ResearchPage() {
             ) : (
               /* ── Message Thread ───────────────────────────────────────── */
               messages.map((msg) => {
-                const isLiveMsg = msg.id === streamingMsgIdRef.current;
+                const isLiveMsg = msg.id === streamingMsgId;
                 const isStreamingNow = isLiveMsg && streamPhase === "streaming";
 
                 return (

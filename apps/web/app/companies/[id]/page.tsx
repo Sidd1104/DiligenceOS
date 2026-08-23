@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, useRef, use } from "react";
+import React, { useEffect, useState, useRef, useCallback, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Building2,
   UploadCloud,
   FileText,
   CheckCircle2,
@@ -14,7 +13,6 @@ import {
   AlertCircle,
   ShieldCheck,
   FileType,
-  HardDrive,
   RefreshCw,
   Brain,
   TrendingUp,
@@ -27,7 +25,6 @@ import { useAuth } from "@/lib/auth-context";
 import { Company, fetchCompany } from "@/lib/companies";
 import {
   DocumentItem,
-  DocumentStatus,
   fetchCompanyDocuments,
   retryDocument,
   uploadDocument,
@@ -65,7 +62,7 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
       setRetryingIds((prev) => ({ ...prev, [documentId]: true }));
       await retryDocument(documentId);
       await loadDocuments(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to retry document processing:", err);
     } finally {
       setRetryingIds((prev) => ({ ...prev, [documentId]: false }));
@@ -86,7 +83,7 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
         setLoadingCompany(true);
         const data = await fetchCompany(companyId);
         setCompany(data);
-      } catch (err: any) {
+      } catch {
         // Company fetch error handled in UI
       } finally {
         setLoadingCompany(false);
@@ -98,23 +95,23 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
   }, [user, companyId]);
 
   // Load documents
-  const loadDocuments = async (showLoadingSkeleton = false) => {
+  const loadDocuments = useCallback(async (showLoadingSkeleton = false) => {
     try {
       if (showLoadingSkeleton) setLoadingDocs(true);
       const docs = await fetchCompanyDocuments(companyId);
       setDocuments(docs);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to load documents:", err);
     } finally {
       if (showLoadingSkeleton) setLoadingDocs(false);
     }
-  };
+  }, [companyId]);
 
   useEffect(() => {
     if (user && companyId) {
       loadDocuments(true);
     }
-  }, [user, companyId]);
+  }, [user, companyId, loadDocuments]);
 
   // Polling: Check if any document is QUEUED or PROCESSING
   const hasPendingDocs = documents.some(
@@ -129,7 +126,7 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
     }, 2000);
 
     return () => clearInterval(intervalId);
-  }, [hasPendingDocs, user, companyId]);
+  }, [hasPendingDocs, user, companyId, loadDocuments]);
 
   // File Upload Handler
   const handleFile = async (file: File) => {
@@ -152,8 +149,9 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
       setUploading(true);
       await uploadDocument(companyId, file);
       await loadDocuments(false);
-    } catch (err: any) {
-      setUploadError(err.message || "Failed to upload document");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to upload document";
+      setUploadError(message);
     } finally {
       setUploading(false);
       if (fileInputRef.current) {

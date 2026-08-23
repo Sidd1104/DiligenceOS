@@ -137,9 +137,10 @@ export async function streamResearchQuestion(
         }
       }
     }
-  } catch (err: any) {
-    const isAbort = err?.name === "AbortError";
-    onError(err.message || "Error reading stream", isAbort);
+  } catch (err: unknown) {
+    const errorObj = err as { name?: string; message?: string };
+    const isAbort = errorObj?.name === "AbortError";
+    onError(errorObj?.message || "Error reading stream", isAbort);
   }
 }
 

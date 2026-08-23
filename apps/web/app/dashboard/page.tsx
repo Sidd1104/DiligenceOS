@@ -22,7 +22,7 @@ import { Company, fetchCompanies, createCompany } from "@/lib/companies";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -67,17 +67,34 @@ export default function DashboardPage() {
       setError(null);
       const data = await fetchCompanies();
       setCompanies(data);
-    } catch (err: any) {
-      setError(err.message || "Failed to load companies");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to load companies";
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (user) {
-      loadCompanies();
-    }
+    if (!user) return;
+    let isMounted = true;
+    fetchCompanies()
+      .then((data) => {
+        if (isMounted) setCompanies(data);
+      })
+      .catch((err: unknown) => {
+        if (isMounted) {
+          const message = err instanceof Error ? err.message : "Failed to load companies";
+          setError(message);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const handleLogout = async () => {
@@ -111,8 +128,9 @@ export default function DashboardPage() {
 
       setIsDialogOpen(false);
       await loadCompanies();
-    } catch (err: any) {
-      setFormError(err.message || "Failed to create company");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create company";
+      setFormError(message);
     } finally {
       setIsSubmitting(false);
     }
