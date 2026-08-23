@@ -250,34 +250,34 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {companies.map((company) => (
               <Link key={company.id} href={`/companies/${company.id}`} className="group block focus:outline-none">
-                <Card className="h-full flex flex-col justify-between transition-all duration-200 group-hover:border-ring group-hover:shadow-md">
-                  <CardHeader className="space-y-2 pb-3">
+                <Card className="h-full flex flex-col justify-between border border-white/10 bg-[#131b2e] transition-all duration-150 hover:border-[#2563eb] hover:bg-[#1c273e]/70 hover:shadow-lg">
+                  <CardHeader className="space-y-2 pb-3 border-b border-white/5">
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="group-hover:text-primary transition-colors line-clamp-1">
+                      <CardTitle className="font-heading text-base font-semibold text-[#f8fafc] group-hover:text-[#2563eb] transition-colors line-clamp-1">
                         {company.name}
                       </CardTitle>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      <ArrowRight className="h-4 w-4 text-[#94a3b8] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0" />
                     </div>
                     {company.industry ? (
-                      <span className="inline-flex items-center rounded-md bg-secondary/80 px-2.5 py-0.5 text-xs font-medium text-secondary-foreground w-fit">
+                      <span className="inline-flex items-center rounded-full bg-[#2563eb]/10 px-2.5 py-0.5 text-xs font-mono text-[#2563eb] border border-[#2563eb]/20 w-fit">
                         {company.industry}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground w-fit">
+                      <span className="inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 text-xs font-mono text-[#94a3b8] border border-white/10 w-fit">
                         Unspecified Industry
                       </span>
                     )}
                   </CardHeader>
 
-                  <CardContent className="pb-4">
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {company.description || "No description provided."}
+                  <CardContent className="py-4">
+                    <p className="text-xs text-[#94a3b8] line-clamp-2 leading-relaxed">
+                      {company.description || "Institutional due-diligence & evidence retrieval workspace."}
                     </p>
                   </CardContent>
 
-                  <CardFooter className="border-t pt-3 text-xs text-muted-foreground flex justify-between items-center">
+                  <CardFooter className="border-t border-white/5 pt-3 text-[11px] text-[#94a3b8] flex justify-between items-center font-mono">
                     <span>Added {new Date(company.created_at).toLocaleDateString()}</span>
-                    <span className="font-mono text-[10px] text-muted-foreground/70">
+                    <span className="text-[#94a3b8]/70">
                       ID: {company.id.slice(0, 8)}...
                     </span>
                   </CardFooter>
