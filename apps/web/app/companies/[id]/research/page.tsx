@@ -566,24 +566,24 @@ export default function ResearchPage() {
                   >
                     {/* Avatar */}
                     <div
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold shadow-sm ${
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold shadow-xs ${
                         msg.role === "user"
-                          ? "bg-[#d4af6a] text-white"
-                          : "bg-[#15151c] border border-white/10 text-[#f5f3ef]"
+                          ? "bg-[rgba(212,175,106,0.14)] text-[#d4af6a] border border-[rgba(212,175,106,0.28)]"
+                          : "bg-[#15151c] border border-[rgba(245,243,239,0.08)] text-[#d4af6a]"
                       }`}
                     >
                       {msg.role === "user" ? (
-                        <User className="h-4 w-4" />
+                        <User className="h-4.5 w-4.5" />
                       ) : (
-                        <Bot className="h-4 w-4 text-[#d4af6a]" />
+                        <Bot className="h-5 w-5 text-[#d4af6a]" />
                       )}
                     </div>
 
                     {/* Message content */}
                     <div className="space-y-2 min-w-0 flex-1">
                       {msg.role === "user" ? (
-                        /* User bubble */
-                        <div className="rounded-2xl rounded-tr-none bg-[#d4af6a] px-5 py-3.5 text-sm leading-relaxed text-white shadow-sm">
+                        /* User bubble — dark glass panel with subtle gold left border accent */
+                        <div className="rounded-2xl rounded-tr-none border border-[rgba(212,175,106,0.25)] border-l-2 border-l-[#d4af6a] bg-[#15151c] px-5 py-3.5 text-sm leading-relaxed text-[#f5f3ef] shadow-sm">
                           <p className="whitespace-pre-wrap">{msg.content}</p>
                         </div>
                       ) : msg.isNoEvidence ? (
