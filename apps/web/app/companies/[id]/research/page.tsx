@@ -427,7 +427,7 @@ export default function ResearchPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#0a0a0d] text-[#f5f3ef]">
       {/* ── Header Bar ─────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/10 bg-[#0a0a0d]/95 px-6 backdrop-blur">
+      <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between border-b border-white/10 bg-[#0a0a0d]/95 px-6 backdrop-blur-md">
         <div className="flex items-center gap-4">
           <Link href={`/companies/${companyId}`}>
             <Button variant="ghost" size="sm" className="gap-2 text-[#9a968c] hover:text-[#f5f3ef]">
@@ -449,7 +449,7 @@ export default function ResearchPage() {
       </header>
 
       {/* ── Main Layout ────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden pt-16">
         {/* Sessions Sidebar */}
         <aside className="w-72 border-r border-white/10 bg-[#101015] flex flex-col hidden md:flex">
           <div className="p-4 border-b border-white/10">

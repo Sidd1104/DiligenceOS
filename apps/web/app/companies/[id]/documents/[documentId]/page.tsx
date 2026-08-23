@@ -148,7 +148,7 @@ export default function DocumentViewerPage({ params }: PageProps) {
   return (
     <div className="flex h-screen flex-col bg-[#0a0a0d] text-[#f5f3ef] overflow-hidden">
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-[#0a0a0d]/95 px-6 backdrop-blur">
+      <header className="fixed top-0 left-0 right-0 z-50 flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-[#0a0a0d]/95 px-6 backdrop-blur-md">
         <div className="flex items-center gap-4 min-w-0">
           <Link href={`/companies/${companyId}`}>
             <Button variant="ghost" size="sm" className="gap-2 text-[#9a968c] hover:text-[#f5f3ef]">
@@ -255,7 +255,7 @@ export default function DocumentViewerPage({ params }: PageProps) {
       </header>
 
       {/* Main Document Viewer Container */}
-      <main className="flex-1 bg-[#0a0a0d] relative overflow-hidden flex flex-col items-center justify-center p-4">
+      <main className="flex-1 bg-[#0a0a0d] relative overflow-hidden flex flex-col items-center justify-center p-4 pt-20">
         {loading ? (
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#d4af6a]/10 text-[#d4af6a] border border-[#d4af6a]/20 shadow-inner">

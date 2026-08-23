@@ -262,7 +262,7 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
   return (
     <div className="relative z-2 min-h-screen text-[#f5f3ef]">
       {/* Top Header */}
-      <header className="border-b border-[rgba(245,243,239,0.08)] bg-[rgba(10,10,13,0.88)] backdrop-blur-md sticky top-0 z-30">
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-[rgba(245,243,239,0.08)] bg-[#0a0a0d]/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link
             href="/dashboard"
@@ -279,7 +279,7 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 space-y-8">
         {/* Company Header */}
         {loadingCompany ? (
           <div className="space-y-3">

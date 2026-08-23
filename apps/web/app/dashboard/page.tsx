@@ -171,7 +171,7 @@ export default function DashboardPage() {
   return (
     <div className="relative z-2 min-h-screen text-[#f5f3ef]">
       {/* Top Header / Navigation Bar */}
-      <header className="sticky top-0 z-30 border-b border-[rgba(245,243,239,0.08)] bg-[rgba(10,10,13,0.92)] backdrop-blur-md">
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-[rgba(245,243,239,0.08)] bg-[#0a0a0d]/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgba(212,175,106,0.14)] text-[#d4af6a] border border-[rgba(212,175,106,0.28)] shadow-xs">
@@ -200,7 +200,7 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 space-y-6">
         {/* Telemetry Hero Section */}
         <div className="relative overflow-hidden rounded-2xl border border-[rgba(245,243,239,0.08)] bg-[#15151c] p-6 sm:p-8 shadow-xl backdrop-blur-md">
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
