@@ -377,3 +377,78 @@ def test_rag_financial_highlights_synthesis_and_retrieval(client):
     assert len(done_event["citations"]) >= 1
     assert done_event["citations"][0]["filename"] == "meridian_annual_report.pdf"
 
+
+def test_strict_cross_company_rag_tenant_isolation(client):
+    """
+    REGRESSION TEST: Cross-Company RAG Data Leak Prevention.
+    Creates Company A ("Meridian Alpha") and Company B ("Wayfield Beta").
+    Uploads meridian_annual_report.pdf to Company A and wayfield_pitch_deck.pdf to Company B.
+    Queries Company A's research endpoint and asserts that ZERO chunks or citations from
+    Company B ("wayfield_pitch_deck.pdf") ever leak into the response.
+    """
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "iso_analyst@example.com", "password": "password123"},
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "iso_analyst@example.com", "password": "password123"},
+    )
+
+    # Company A
+    res_comp_a = client.post("/api/v1/companies", json={"name": "Meridian Alpha"})
+    comp_a_id = res_comp_a.json()["id"]
+
+    # Company B
+    res_comp_b = client.post("/api/v1/companies", json={"name": "Wayfield Beta"})
+    comp_b_id = res_comp_b.json()["id"]
+
+    # Upload Doc A to Company A
+    pdf_a = create_sample_financial_pdf_bytes()
+    res_up_a = client.post(
+        f"/api/v1/companies/{comp_a_id}/documents",
+        files={"file": ("meridian_annual_report.pdf", pdf_a, "application/pdf")},
+    )
+    process_doc_synchronously(res_up_a.json()["id"], pdf_a)
+
+    # Upload Doc B to Company B
+    pdf_b = create_sample_financial_pdf_bytes()
+    res_up_b = client.post(
+        f"/api/v1/companies/{comp_b_id}/documents",
+        files={"file": ("wayfield_pitch_deck.pdf", pdf_b, "application/pdf")},
+    )
+    process_doc_synchronously(res_up_b.json()["id"], pdf_b)
+
+    # Query Company A
+    res_qa_a = client.post(
+        f"/api/v1/companies/{comp_a_id}/research",
+        json={"question": "What are the key financial highlights of this company?"},
+    )
+    assert res_qa_a.status_code == 200
+
+    answer_a, done_a = parse_sse_stream_response(res_qa_a.text)
+    assert done_a is not None
+
+    # ZERO references or citations to Company B's document allowed
+    assert "wayfield_pitch_deck.pdf" not in answer_a
+    for cite in done_a.get("citations", []):
+        assert cite["filename"] == "meridian_annual_report.pdf"
+        assert cite["filename"] != "wayfield_pitch_deck.pdf"
+
+    # Query Company B
+    res_qa_b = client.post(
+        f"/api/v1/companies/{comp_b_id}/research",
+        json={"question": "What are the key financial highlights of this company?"},
+    )
+    assert res_qa_b.status_code == 200
+
+    answer_b, done_b = parse_sse_stream_response(res_qa_b.text)
+    assert done_b is not None
+
+    # ZERO references or citations to Company A's document allowed
+    assert "meridian_annual_report.pdf" not in answer_b
+    for cite in done_b.get("citations", []):
+        assert cite["filename"] == "wayfield_pitch_deck.pdf"
+        assert cite["filename"] != "meridian_annual_report.pdf"
+
+

@@ -53,14 +53,28 @@ def retrieve_relevant_chunks(
     top_k: int = 10,
 ) -> Tuple[List[dict], float]:
     """
-    Queries `document_chunks` for a company_id using a unified hybrid vector similarity and keyword ranking engine.
-    Ensures identical structural behavior across both PostgreSQL pgvector and SQLite dev/test environments.
+    Queries `document_chunks` strictly for a specific company_id using a unified hybrid vector similarity engine.
+
+    HARD DATABASE-LEVEL TENANT ISOLATION:
+    Filters both DocumentChunk.company_id and Document.company_id to target_company_id.
+    Zero chunks from any other company can ever leak into the candidate pool.
     """
-    if not question_vector:
+    if not question_vector or not company_id:
         return [], 0.0
 
-    # Query all candidate chunks for the company
-    chunks = db.query(DocumentChunk).filter(DocumentChunk.company_id == company_id).all()
+    # Ensure company_id is a valid UUID object
+    target_company_id = UUID(str(company_id)) if not isinstance(company_id, UUID) else company_id
+
+    # Strict hard database-level tenant isolation WHERE clause
+    chunks = (
+        db.query(DocumentChunk)
+        .join(Document, DocumentChunk.document_id == Document.id)
+        .filter(
+            DocumentChunk.company_id == target_company_id,
+            Document.company_id == target_company_id,
+        )
+        .all()
+    )
     if not chunks:
         return [], 0.0
 
@@ -94,6 +108,7 @@ def retrieve_relevant_chunks(
             {
                 "chunk_id": chunk.id,
                 "document_id": chunk.document_id,
+                "company_id": chunk.company_id,
                 "filename": filename,
                 "page_number": chunk.page_number or 1,
                 "section_title": chunk.section_title or "General",
@@ -112,8 +127,8 @@ def retrieve_relevant_chunks(
     # Log diagnostic ranking output
     for idx, c in enumerate(top_chunks, 1):
         logger.info(
-            f"[RAG Retrieval] Rank {idx} | Page {c['page_number']} (Chunk {c['chunk_index']}) | "
-            f"Similarity: {c['similarity']:.4f} | Section: {c['section_title']} | Snippet: {c['text'][:70]!r}"
+            f"[RAG Retrieval] Rank {idx} | Company: {c['company_id']} | Doc: {c['filename']} | Page {c['page_number']} | "
+            f"Similarity: {c['similarity']:.4f} | Snippet: {c['text'][:60]!r}"
         )
 
     return top_chunks, max_score
