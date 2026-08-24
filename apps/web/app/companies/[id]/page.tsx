@@ -30,7 +30,9 @@ import {
   uploadDocument,
 } from "@/lib/documents";
 import { Button } from "@/components/ui/button";
+import { DiligenceLogo } from "@/components/ui/logo";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface CompanyPageProps {
@@ -269,10 +271,9 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Link>
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-[#d4af6a]" />
-            <span className="text-sm font-semibold tracking-tight font-heading">DiligenceOS</span>
-          </div>
+          <Link href="/dashboard">
+            <DiligenceLogo className="w-7 h-7" textSize="text-sm" />
+          </Link>
         </div>
       </header>
 

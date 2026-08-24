@@ -22,7 +22,11 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "DiligenceOS — AI Due Diligence Platform",
   description: "AI-powered due-diligence platform for investment analysts.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
+
 
 export default function RootLayout({
   children,

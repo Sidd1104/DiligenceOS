@@ -1,3 +1,5 @@
+import { API_BASE_URL, authenticatedFetch } from "./api";
+
 export type DocumentStatus = "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
 
 export type DocumentItem = {
@@ -14,16 +16,13 @@ export type DocumentItem = {
   error_message?: string | null;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 export async function uploadDocument(companyId: string, file: File): Promise<DocumentItem> {
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch(`${API_BASE_URL}/api/v1/companies/${companyId}/documents`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/companies/${companyId}/documents`, {
     method: "POST",
     body: formData,
-    credentials: "include",
   });
 
   if (!res.ok) {
@@ -39,10 +38,9 @@ export async function uploadDocument(companyId: string, file: File): Promise<Doc
 }
 
 export async function fetchCompanyDocuments(companyId: string): Promise<DocumentItem[]> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/companies/${companyId}/documents`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/companies/${companyId}/documents`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
   });
 
   if (!res.ok) {
@@ -57,10 +55,9 @@ export async function fetchCompanyDocuments(companyId: string): Promise<Document
 }
 
 export async function fetchDocument(documentId: string): Promise<DocumentItem> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/documents/${documentId}`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/documents/${documentId}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
   });
 
   if (!res.ok) {
@@ -80,10 +77,9 @@ export type DocumentUrlResponse = {
 };
 
 export async function fetchDocumentSignedUrl(documentId: string): Promise<DocumentUrlResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/documents/${documentId}/url`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/documents/${documentId}/url`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
   });
 
   if (!res.ok) {
@@ -98,10 +94,9 @@ export async function fetchDocumentSignedUrl(documentId: string): Promise<Docume
 }
 
 export async function retryDocument(documentId: string): Promise<DocumentItem> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/documents/${documentId}/retry`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/documents/${documentId}/retry`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
   });
 
   if (!res.ok) {
@@ -111,4 +106,3 @@ export async function retryDocument(documentId: string): Promise<DocumentItem> {
 
   return res.json();
 }
-

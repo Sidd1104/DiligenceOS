@@ -20,3 +20,5 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     # Relationships
     workspace = relationship("Workspace", back_populates="user", uselist=False)
     research_sessions = relationship("ResearchSession", back_populates="user")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+

@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, ArrowRight, Lock, Mail, User, Loader2 } from "lucide-react";
+import { ArrowRight, Lock, Mail, User, Loader2 } from "lucide-react";
 import { AuroraBackground } from "@/components/ui/aurora-background";
+import { DiligenceLogo } from "@/components/ui/logo";
 
 export default function RegisterPage() {
   const { user, loading, register } = useAuth();
@@ -43,7 +44,7 @@ export default function RegisterPage() {
   if (loading) {
     return (
       <AuroraBackground className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#d4af6a]" />
+        <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
       </AuroraBackground>
     );
   }
@@ -53,11 +54,8 @@ export default function RegisterPage() {
 
       <div className="w-full max-w-md space-y-6">
         {/* Branding Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(212,175,106,0.14)] text-[#d4af6a] border border-[rgba(212,175,106,0.28)] shadow-xs mb-1">
-            <ShieldCheck className="h-6 w-6" />
-          </div>
-          <h1 className="text-3xl font-semibold tracking-tight font-heading">DiligenceOS</h1>
+        <div className="text-center space-y-2 flex flex-col items-center">
+          <DiligenceLogo className="w-12 h-12 mb-1" textSize="text-3xl" />
           <p className="text-xs text-[#9a968c] max-w-xs mx-auto">
             Institutional due-diligence & evidence retrieval portal
           </p>

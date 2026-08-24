@@ -20,7 +20,9 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { Company, fetchCompanies, createCompany } from "@/lib/companies";
 import { Button } from "@/components/ui/button";
+import { DiligenceLogo } from "@/components/ui/logo";
 import { Input } from "@/components/ui/input";
+
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -191,17 +193,9 @@ export default function DashboardPage() {
       {/* Top Header / Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-[rgba(245,243,239,0.08)] bg-[#0a0a0d]/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgba(212,175,106,0.14)] text-[#d4af6a] border border-[rgba(212,175,106,0.28)] shadow-xs">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-base font-semibold tracking-tight font-heading text-[#f5f3ef]">DiligenceOS</h1>
-              <p className="text-[11px] text-[#9a968c] hidden sm:block font-sans">
-                Institutional Analyst Workspace
-              </p>
-            </div>
-          </div>
+          <Link href="/dashboard" className="flex items-center">
+            <DiligenceLogo className="w-8 h-8" textSize="text-base" />
+          </Link>
 
           <div className="flex items-center gap-3">
             <div className="hidden md:flex items-center gap-2 rounded-full border border-[rgba(245,243,239,0.08)] bg-[#15151c] px-3.5 py-1 text-xs">

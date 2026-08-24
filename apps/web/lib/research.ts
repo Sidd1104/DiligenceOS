@@ -1,6 +1,4 @@
-/**
- * DiligenceOS — AI Research API Client.
- */
+import { API_BASE_URL, authenticatedFetch } from "./api";
 
 export type CitationItem = {
   id: string;
@@ -35,18 +33,15 @@ export type ResearchAnswerResponse = {
   citations: CitationItem[];
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 export async function askResearchQuestion(
   companyId: string,
   question: string,
   sessionId?: string
 ): Promise<ResearchAnswerResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/companies/${companyId}/research`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/companies/${companyId}/research`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question, session_id: sessionId }),
-    credentials: "include",
   });
 
   if (!res.ok) {
@@ -66,11 +61,10 @@ export async function streamResearchQuestion(
   onError: (error: string, isAbort?: boolean) => void,
   signal?: AbortSignal
 ): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/companies/${companyId}/research`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/companies/${companyId}/research`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question, session_id: sessionId }),
-    credentials: "include",
     signal,
   });
 
@@ -145,10 +139,9 @@ export async function streamResearchQuestion(
 }
 
 export async function fetchCompanySessions(companyId: string): Promise<ResearchSessionItem[]> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/companies/${companyId}/research/sessions`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/companies/${companyId}/research/sessions`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
   });
 
   if (!res.ok) {
@@ -160,10 +153,9 @@ export async function fetchCompanySessions(companyId: string): Promise<ResearchS
 }
 
 export async function fetchSessionMessages(sessionId: string): Promise<ResearchMessageItem[]> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/research/sessions/${sessionId}/messages`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/research/sessions/${sessionId}/messages`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
   });
 
   if (!res.ok) {

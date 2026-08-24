@@ -15,7 +15,8 @@ from app.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 ALGORITHM = "HS256"
-DEFAULT_ACCESS_TOKEN_EXPIRE_DAYS = 7
+DEFAULT_ACCESS_TOKEN_EXPIRE_MINUTES = 15
+REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 
 def hash_password(password: str) -> str:
@@ -34,20 +35,21 @@ def create_access_token(
     extra_claims: Optional[dict[str, Any]] = None,
 ) -> str:
     """
-    Creates a signed JWT access token.
+    Creates a signed short-lived JWT access token (15 min default).
     `subject` is typically the user ID (UUID string).
     """
     now = datetime.now(timezone.utc)
     if expires_delta:
         expire = now + expires_delta
     else:
-        expire = now + timedelta(days=DEFAULT_ACCESS_TOKEN_EXPIRE_DAYS)
+        expire = now + timedelta(minutes=DEFAULT_ACCESS_TOKEN_EXPIRE_DAYS if False else DEFAULT_ACCESS_TOKEN_EXPIRE_MINUTES)
 
     payload = {
         "sub": subject,
         "iat": now,
         "exp": expire,
     }
+
     if extra_claims:
         payload.update(extra_claims)
 

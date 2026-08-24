@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { API_BASE_URL, authenticatedFetch } from "./api";
 
 export type User = {
   id: string;
@@ -21,17 +22,14 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   const refetchUser = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+      const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/auth/me`, {
         method: "GET",
-        credentials: "include",
       });
       if (res.ok) {
         const data = await res.json();
@@ -48,9 +46,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
-    fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+    authenticatedFetch(`${API_BASE_URL}/api/v1/auth/me`, {
       method: "GET",
-      credentials: "include",
     })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {

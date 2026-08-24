@@ -14,6 +14,7 @@ from app.models.processing_job import ProcessingJob
 from app.models.research_session import ResearchSession
 from app.models.research_message import ResearchMessage
 from app.models.citation import Citation
+from app.models.refresh_token import RefreshToken
 
 __all__ = [
     "Base",
@@ -26,4 +27,6 @@ __all__ = [
     "ResearchSession",
     "ResearchMessage",
     "Citation",
+    "RefreshToken",
 ]
+

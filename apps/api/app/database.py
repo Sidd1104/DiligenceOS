@@ -27,10 +27,13 @@ except Exception as conn_err:
         "sqlite:///./diligenceos_dev.db",
         connect_args={"check_same_thread": False},
     )
-    from app.models import Base
-    Base.metadata.create_all(bind=engine)
+from app.models import Base
+Base.metadata.create_all(bind=engine)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+
 
 
 def get_db():

@@ -97,11 +97,8 @@ def generate_embeddings(texts: List[str]) -> List[List[float]]:
                 batch_embeddings = [item["embedding"] for item in data["data"]]
                 embeddings.extend(batch_embeddings)
         except Exception as err:
-            if in_test or "429" in str(err):
-                logger.warning(f"Voyage AI embeddings API call rate limit or test mode: {err}. Using fallback vectors.")
-                embeddings.extend([generate_fallback_embedding(t) for t in batch_texts])
-            else:
-                logger.error(f"Voyage AI embeddings API call failed: {err}")
-                raise RuntimeError(f"Voyage AI embeddings API call failed: {err}")
+            logger.error(f"Voyage AI embeddings API call failed: {err}")
+            raise RuntimeError(f"Voyage AI embeddings API call failed: {err}")
+
 
     return embeddings
