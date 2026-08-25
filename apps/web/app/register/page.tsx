@@ -53,7 +53,7 @@ export default function RegisterPage() {
   return (
     <AuroraBackground className="flex min-h-screen flex-col items-center justify-center p-4">
 
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-[540px] space-y-6">
         {/* Branding Header */}
         <div className="text-center space-y-2 flex flex-col items-center">
           <DiligenceLogo className="w-12 h-12 mb-1" textSize="text-3xl" />
@@ -63,7 +63,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Auth Card */}
-        <div className="rounded-2xl border border-[rgba(245,243,239,0.08)] bg-[rgba(21,21,28,0.9)] p-8 shadow-xl backdrop-blur-xl space-y-6">
+        <div className="rounded-2xl border border-[rgba(245,243,239,0.08)] bg-[rgba(21,21,28,0.9)] p-9 shadow-xl backdrop-blur-xl space-y-6">
           <div>
             <h2 className="text-xl font-bold tracking-tight text-[#f5f3ef]">Create enterprise account</h2>
             <p className="text-xs text-[#9a968c] mt-1">Set up your analyst workspace account</p>
