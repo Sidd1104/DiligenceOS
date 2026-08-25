@@ -202,45 +202,128 @@ class GeminiProvider(AIProvider):
         raise last_err
 
 
+class FallbackAIProvider(AIProvider):
+    """
+    Composite provider that tries primary provider (Anthropic) first.
+    If primary fails (rate limit, credit error, timeout, or any exception),
+    it automatically falls back to secondary provider (Gemini).
+    """
+
+    def __init__(self, primary: AIProvider, fallback: Optional[AIProvider] = None):
+        self._primary = primary
+        self._fallback = fallback
+        self._last_active_provider = primary
+
+    @property
+    def provider_name(self) -> str:
+        return self._last_active_provider.provider_name
+
+    @property
+    def model_name(self) -> str:
+        return self._last_active_provider.model_name
+
+    def generate_answer(self, system_prompt: str, user_prompt: str) -> str:
+        try:
+            logger.info(f"[AI Provider] Attempting primary provider: {self._primary.provider_name} ({self._primary.model_name})")
+            answer = self._primary.generate_answer(system_prompt, user_prompt)
+            self._last_active_provider = self._primary
+            logger.info(f"[AI Provider] Primary provider ({self._primary.provider_name}) succeeded.")
+            return answer
+        except Exception as primary_err:
+            logger.warning(
+                f"[AI Provider] Primary provider ({self._primary.provider_name}) failed: {primary_err}. "
+                f"Attempting automatic fallback..."
+            )
+            if self._fallback:
+                try:
+                    logger.info(f"[AI Provider] Attempting fallback provider: {self._fallback.provider_name} ({self._fallback.model_name})")
+                    answer = self._fallback.generate_answer(system_prompt, user_prompt)
+                    self._last_active_provider = self._fallback
+                    logger.info(f"[AI Provider] Fallback provider ({self._fallback.provider_name}) succeeded!")
+                    return answer
+                except Exception as fallback_err:
+                    logger.error(f"[AI Provider] Fallback provider ({self._fallback.provider_name}) also failed: {fallback_err}")
+                    raise fallback_err
+            raise primary_err
+
+    def stream_answer(
+        self, system_prompt: str, user_prompt: str
+    ) -> Generator[str, None, None]:
+        try:
+            logger.info(f"[AI Provider Stream] Attempting primary provider: {self._primary.provider_name} ({self._primary.model_name})")
+            # Consume tokens from primary
+            token_count = 0
+            for token in self._primary.stream_answer(system_prompt, user_prompt):
+                token_count += 1
+                self._last_active_provider = self._primary
+                yield token
+            logger.info(f"[AI Provider Stream] Primary provider ({self._primary.provider_name}) finished after {token_count} tokens.")
+            return
+        except Exception as primary_err:
+            logger.warning(
+                f"[AI Provider Stream] Primary provider ({self._primary.provider_name}) failed: {primary_err}. "
+                f"Attempting automatic fallback..."
+            )
+            if self._fallback:
+                try:
+                    logger.info(f"[AI Provider Stream] Attempting fallback provider: {self._fallback.provider_name} ({self._fallback.model_name})")
+                    token_count = 0
+                    for token in self._fallback.stream_answer(system_prompt, user_prompt):
+                        token_count += 1
+                        self._last_active_provider = self._fallback
+                        yield token
+                    logger.info(f"[AI Provider Stream] Fallback provider ({self._fallback.provider_name}) finished after {token_count} tokens.")
+                    return
+                except Exception as fallback_err:
+                    logger.error(f"[AI Provider Stream] Fallback provider ({self._fallback.provider_name}) also failed: {fallback_err}")
+                    raise fallback_err
+            raise primary_err
+
+
 def get_ai_provider() -> AIProvider:
     """
     Factory function that returns the configured AI provider instance.
 
-    Reads AI_PROVIDER from settings to determine which provider to use.
-    Raises RuntimeError if the selected provider has no API key configured.
+    Always configures Anthropic as PRIMARY and Gemini as SECONDARY (fallback)
+    if both API keys are configured, enabling seamless automatic runtime failover.
     """
-    provider_name = settings.ai_provider.lower().strip()
+    anthropic_key = settings.anthropic_api_key
+    gemini_key = settings.gemini_api_key
 
-    if provider_name == "gemini":
-        api_key = settings.gemini_api_key
-        if not api_key or api_key.startswith("your-"):
-            raise RuntimeError(
-                "AI_PROVIDER is set to 'gemini' but GEMINI_API_KEY is not configured. "
-                "Set GEMINI_API_KEY in your .env file."
-            )
-        logger.info(f"[AI Provider] Using GeminiProvider (model={GeminiProvider.GEMINI_MODEL})")
-        return GeminiProvider(api_key=api_key)
+    has_anthropic = bool(anthropic_key and not anthropic_key.startswith("your-"))
+    has_gemini = bool(gemini_key and not gemini_key.startswith("your-"))
 
-    elif provider_name == "anthropic":
-        api_key = settings.anthropic_api_key
-        if not api_key or api_key.startswith("your-"):
-            raise RuntimeError(
-                "AI_PROVIDER is set to 'anthropic' but ANTHROPIC_API_KEY is not configured. "
-                "Set ANTHROPIC_API_KEY in your .env file."
-            )
-        logger.info(f"[AI Provider] Using AnthropicProvider (model={AnthropicProvider.CLAUDE_MODEL})")
-        return AnthropicProvider(api_key=api_key)
+    primary_provider: Optional[AIProvider] = None
+    fallback_provider: Optional[AIProvider] = None
 
-    else:
+    if has_anthropic:
+        primary_provider = AnthropicProvider(api_key=anthropic_key)
+        logger.info(f"[AI Provider Factory] Primary: Anthropic ({AnthropicProvider.CLAUDE_MODEL})")
+
+    if has_gemini:
+        gem_prov = GeminiProvider(api_key=gemini_key)
+        if primary_provider is None:
+            primary_provider = gem_prov
+            logger.info(f"[AI Provider Factory] Primary: Gemini ({GeminiProvider.GEMINI_MODEL})")
+        else:
+            fallback_provider = gem_prov
+            logger.info(f"[AI Provider Factory] Fallback: Gemini ({GeminiProvider.GEMINI_MODEL})")
+
+    if not primary_provider:
         raise RuntimeError(
-            f"Unknown AI_PROVIDER value: {provider_name!r}. "
-            f"Supported values: 'anthropic', 'gemini'."
+            "Neither ANTHROPIC_API_KEY nor GEMINI_API_KEY is configured in environment. "
+            "Please configure at least one valid AI provider key in .env."
         )
+
+    if fallback_provider:
+        return FallbackAIProvider(primary=primary_provider, fallback=fallback_provider)
+    return primary_provider
 
 
 def get_provider_api_key() -> str:
-    """Returns the API key for the currently configured provider."""
-    provider_name = settings.ai_provider.lower().strip()
-    if provider_name == "gemini":
-        return settings.gemini_api_key
-    return settings.anthropic_api_key
+    """Returns an active API key (Anthropic or Gemini)."""
+    anthropic_key = settings.anthropic_api_key
+    if anthropic_key and not anthropic_key.startswith("your-"):
+        return anthropic_key
+    return settings.gemini_api_key or ""
+

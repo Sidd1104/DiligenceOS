@@ -20,6 +20,8 @@ import {
   ClipboardList,
   Plus,
   Trash2,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
@@ -338,12 +340,6 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
               </div>
 
               <div className="flex items-center gap-3">
-                <Link href={`/companies/${company.id}/research`}>
-                  <Button className="gap-2 shadow-sm font-medium">
-                    <Brain className="h-4 w-4" />
-                    AI Research Assistant
-                  </Button>
-                </Link>
                 {hasPendingDocs && (
                   <div className="flex items-center gap-2 text-xs text-[#d4af6a] bg-[rgba(212,175,106,0.14)] border border-[rgba(212,175,106,0.28)] px-3 py-1.5 rounded-full w-fit">
                     <RefreshCw className="h-3.5 w-3.5 animate-spin text-[#d4af6a]" />
@@ -568,6 +564,30 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            {/* AI Research Assistant CTA Banner — Prominent Next Step Below Documents */}
+            <div className="rounded-2xl border border-[rgba(212,175,106,0.28)] bg-gradient-to-r from-[#15151c] via-[#1a1924] to-[#15151c] p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden group">
+              <div className="space-y-1.5 relative z-10 max-w-2xl">
+                <div className="flex items-center gap-2 text-[#d4af6a] font-mono text-xs tracking-wider uppercase">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Next Step — Due Diligence Analysis</span>
+                </div>
+                <h3 className="text-xl font-bold font-heading text-[#f5f3ef] tracking-tight">
+                  Launch AI Research Assistant
+                </h3>
+                <p className="text-xs sm:text-sm text-[#9a968c] leading-relaxed">
+                  Documents ready — ask structured financial questions, query risk factors, or synthesize executive summaries with grounded citations.
+                </p>
+              </div>
+
+              <Link href={`/companies/${company.id}/research`} className="relative z-10 shrink-0">
+                <Button size="lg" className="gap-2.5 px-6 font-semibold bg-[#d4af6a] hover:bg-[#e6c584] text-black shadow-lg shadow-[rgba(212,175,106,0.2)] hover:shadow-[rgba(212,175,106,0.35)] transition-all">
+                  <Brain className="h-5 w-5" />
+                  Start Research Session
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </>
         )}
