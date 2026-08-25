@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.config import settings
 from app.core.rate_limit import limiter
 from app.core.security import create_access_token, hash_password, verify_password, REFRESH_TOKEN_EXPIRE_DAYS, DEFAULT_ACCESS_TOKEN_EXPIRE_MINUTES
 from app.database import get_db
@@ -110,11 +111,12 @@ def _clear_auth_cookies(response: Response) -> None:
 def register_user(
     request: Request,
     payload: RegisterRequest,
+    response: Response,
     db: Session = Depends(get_db),
 ):
     """
     Registers a new user with email + password.
-    Hashes password and auto-creates a default Workspace for the user.
+    Hashes password, auto-creates a default Workspace, and issues HttpOnly auth cookies.
     """
     existing_user = db.query(User).filter(User.email == payload.email).first()
     if existing_user:
@@ -143,14 +145,7 @@ def register_user(
     db.commit()
     db.refresh(user)
 
-    workspace_id = user.workspace.id if user.workspace else None
-    return UserResponse(
-        id=user.id,
-        email=user.email,
-        full_name=user.full_name,
-        workspace_id=workspace_id,
-        created_at=user.created_at,
-    )
+    return _issue_tokens_and_set_cookies(user, response, db)
 
 
 @router.post(

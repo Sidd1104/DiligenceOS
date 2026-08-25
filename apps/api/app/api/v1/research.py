@@ -219,11 +219,14 @@ def ask_company_research_question(
 )
 def list_company_research_sessions(
     company_id: UUID,
+    skip: int = 0,
+    limit: int = 50,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Lists all past research sessions for a company in the user's workspace (REQ-RAG-06).
+    Supports skip and limit query pagination (REQ-PERF-03).
     """
     if not current_user.workspace:
         raise HTTPException(
@@ -249,6 +252,8 @@ def list_company_research_sessions(
         db.query(ResearchSession)
         .filter(ResearchSession.company_id == company_id)
         .order_by(ResearchSession.created_at.desc())
+        .offset(skip)
+        .limit(limit)
         .all()
     )
 
@@ -274,12 +279,15 @@ def list_company_research_sessions(
 )
 def get_session_messages(
     id: UUID,
+    skip: int = 0,
+    limit: int = 50,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
-    Returns all user and assistant messages with citations for a research session.
+    Returns user and assistant messages with citations for a research session.
     Enforces hard tenant isolation boundary.
+    Supports skip and limit query pagination (REQ-PERF-03).
     """
     if not current_user.workspace:
         raise HTTPException(
@@ -306,6 +314,8 @@ def get_session_messages(
         db.query(ResearchMessage)
         .filter(ResearchMessage.session_id == id)
         .order_by(ResearchMessage.created_at.asc())
+        .offset(skip)
+        .limit(limit)
         .all()
     )
 

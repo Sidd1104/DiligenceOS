@@ -59,12 +59,15 @@ def create_company(
     summary="List all companies in the current user's workspace",
 )
 def list_companies(
+    skip: int = 0,
+    limit: int = 50,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Lists companies belonging exclusively to the authenticated user's workspace.
     Hard tenant isolation boundary enforced at the database query level.
+    Supports skip and limit query pagination (REQ-PERF-03).
     """
     if not current_user.workspace:
         return []
@@ -73,6 +76,8 @@ def list_companies(
         db.query(Company)
         .filter(Company.workspace_id == current_user.workspace.id)
         .order_by(Company.created_at.desc())
+        .offset(skip)
+        .limit(limit)
         .all()
     )
     return companies
