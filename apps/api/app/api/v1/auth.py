@@ -54,8 +54,9 @@ def _issue_tokens_and_set_cookies(user: User, response: Response, db: Session) -
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=settings.cookie_secure,
+        samesite=settings.cookie_samesite,
+        domain=settings.cookie_domain or None,
         max_age=DEFAULT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path="/",
     )
@@ -64,8 +65,9 @@ def _issue_tokens_and_set_cookies(user: User, response: Response, db: Session) -
         key="refresh_token",
         value=raw_refresh_token,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=settings.cookie_secure,
+        samesite=settings.cookie_samesite,
+        domain=settings.cookie_domain or None,
         max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600,
         path="/",
     )

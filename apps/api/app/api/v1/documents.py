@@ -177,8 +177,12 @@ async def upload_document(
     db.commit()
     db.refresh(document)
 
-    # 8. Trigger background processing task
-    background_tasks.add_task(run_process_document_stub, str(job.id), content)
+    # 8. Trigger background processing task (Celery task with fallback)
+    try:
+        from workers.celery_app import celery_app
+        celery_app.send_task("diligenceos.process_document", args=[str(job.id)])
+    except Exception:
+        background_tasks.add_task(run_process_document_stub, str(job.id), content)
 
     return build_document_response(document, db)
 

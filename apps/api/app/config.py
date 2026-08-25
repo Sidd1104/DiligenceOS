@@ -28,8 +28,12 @@ class Settings(BaseSettings):
     # ── Redis ─────────────────────────────────────────────────
     redis_url: str = "redis://redis:6379/0"
 
-    # ── Auth ──────────────────────────────────────────────────
+    # ── Auth & Security ───────────────────────────────────────
     jwt_secret: str = "change-me-in-production"
+    allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000,http://web:3000"
+    cookie_secure: bool = False
+    cookie_samesite: str = "lax"
+    cookie_domain: str = ""
 
     # ── AI Providers ──────────────────────────────────────────
     ai_provider: str = "gemini"  # "anthropic" or "gemini"
