@@ -141,12 +141,20 @@ def build_rag_prompt(question: str, chunks_info: List[dict]) -> Tuple[str, str]:
     """
     system_prompt = (
         "You are DiligenceOS, an expert institutional due diligence and financial AI analyst.\n"
-        "Your goal is to SYNTHESIZE a clear, professional, well-structured, and human-like answer to the user's specific question "
+        "Your goal is to SYNTHESIZE a clear, professional, and genuinely human-readable answer to the user's question "
         "using ONLY the provided evidence chunks from company documents.\n\n"
-        "STRICT INSTRUCTIONS FOR ANSWER SYNTHESIS:\n"
-        "1. SYNTHESIZE LIKE A HUMAN ANALYST: Provide a clean, well-organized response written in clear paragraphs and concise bullet points when appropriate. "
-        "Do NOT simply copy-paste or quote raw text verbatim.\n"
-        "2. FOCUS ON RELEVANT DATA: Base your answer on evidence chunks that contain factual information directly answering "
+        "CRITICAL WRITING STYLE RULES:\n"
+        "- Write your answer as NATURAL, FLOWING PARAGRAPHS — like a professional analyst writing a memo.\n"
+        "- DO NOT dump raw excerpted lines as bullet points. DO NOT prefix lines with '>' quote markers.\n"
+        "- PARAPHRASE and CONNECT facts in your own words while staying strictly accurate to the source data.\n"
+        "- Weave related details together contextually. For example, if the evidence contains a person's name, address, phone, "
+        "and email on separate lines, synthesize them into a single flowing sentence like: "
+        "'Siddhant Mohan Jha is based in Greater Noida, UP 201310, and can be reached at +91-8822457326 or siddmj07@gmail.com.'\n"
+        "- For financial data, integrate figures into analytical sentences rather than listing them raw.\n\n"
+        "STRICT SYNTHESIS INSTRUCTIONS:\n"
+        "1. SYNTHESIZE, NEVER COPY: Provide a clean, well-organized response in clear paragraphs. "
+        "Bullet points are acceptable ONLY for structured comparisons or multi-item lists, never for dumping raw text.\n"
+        "2. FOCUS ON RELEVANT DATA: Base your answer on evidence chunks containing factual information directly answering "
         "the question (e.g. MD&A, financial statements, revenue/margin figures). Ignore cover pages, disclaimers, or generic headers.\n"
         "3. INSUFFICIENT EVIDENCE PATH: If none of the retrieved chunks contain factual data or evidence that answers the specific question, "
         "you MUST state clearly:\n"
@@ -188,7 +196,7 @@ def build_rag_prompt(question: str, chunks_info: List[dict]) -> Tuple[str, str]:
 def _synthesize_fallback_answer(question: str, chunks_info: List[dict]) -> str:
     """
     Generates a CLEARLY LABELED degraded-mode answer from retrieved evidence chunks.
-    Used when Anthropic API is unavailable (no credits, invalid key, network error).
+    Used when the configured AI provider is unavailable (no credits, invalid key, network error).
     """
     if not chunks_info:
         return "Based on the provided documents, I could not find sufficient evidence to answer this query."
@@ -233,7 +241,8 @@ def _synthesize_fallback_answer(question: str, chunks_info: List[dict]) -> str:
             synthesis_lines.append(f"> {line}")
         synthesis_lines.append("")
 
-    synthesis_lines.append("\n---\n*To enable full AI-powered synthesis, please check your Anthropic API key and credit balance.*")
+    provider_label = settings.ai_provider.strip().capitalize()
+    synthesis_lines.append(f"\n---\n*To enable full AI-powered synthesis, please check your {provider_label} API key and credit balance.*")
 
     return "\n".join(synthesis_lines).strip()
 

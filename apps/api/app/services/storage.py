@@ -114,3 +114,44 @@ def generate_presigned_url_for_document(
     # Fallback to local streaming endpoint
     return f"/api/v1/documents/{document_id}/file"
 
+
+def delete_file_from_s3(storage_key: str) -> bool:
+    """
+    Deletes a document file from S3 and local fallback cache.
+
+    Returns True if deletion succeeded or was skipped (unconfigured S3).
+    Logs warnings on failure but does not raise — DB cleanup should still proceed.
+    """
+    # Delete local fallback cache
+    try:
+        clean_key = storage_key.replace("/", os.sep)
+        local_path = os.path.join(tempfile.gettempdir(), clean_key)
+        if os.path.exists(local_path):
+            os.remove(local_path)
+            logger.info(f"Deleted local cached file: {local_path}")
+    except Exception as err:
+        logger.warning(f"Failed to delete local cache for {storage_key}: {err}")
+
+    bucket = settings.aws_s3_bucket
+    aws_access_key = settings.aws_access_key_id
+    aws_secret_key = settings.aws_secret_access_key
+    aws_region = settings.aws_region or "ap-south-1"
+
+    if not bucket or not aws_access_key or not aws_secret_key or aws_access_key.startswith("your-"):
+        logger.info(f"AWS S3 not configured — skipping S3 deletion for {storage_key}.")
+        return True
+
+    try:
+        s3_client = boto3.client(
+            "s3",
+            aws_access_key_id=aws_access_key,
+            aws_secret_access_key=aws_secret_key,
+            region_name=aws_region,
+        )
+        s3_client.delete_object(Bucket=bucket, Key=storage_key)
+        logger.info(f"Successfully deleted {storage_key} from S3 bucket {bucket}")
+        return True
+    except (BotoCoreError, ClientError) as err:
+        logger.warning(f"S3 delete warning for key {storage_key}: {err}")
+        return False
+

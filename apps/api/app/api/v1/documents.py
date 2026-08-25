@@ -5,6 +5,7 @@ Provides:
 - POST /companies/{company_id}/documents
 - GET /companies/{company_id}/documents
 - GET /documents/{id}
+- DELETE /documents/{id}
 
 All routes are protected by `get_current_user` and enforce strict workspace tenant isolation.
 """
@@ -31,11 +32,13 @@ from app.core.rate_limit import get_user_or_ip_key, limiter
 from app.database import get_db
 from app.models.company import Company
 from app.models.document import Document
+from app.models.citation import Citation
 from app.models.document_chunk import DocumentChunk
 from app.models.processing_job import ProcessingJob
 from app.models.user import User
 from app.schemas.document import DocumentResponse, DocumentUrlResponse
 from app.services.storage import (
+    delete_file_from_s3,
     generate_presigned_url_for_document,
     upload_file_to_s3,
 )
@@ -454,3 +457,68 @@ def retry_document_processing(
 
     return build_document_response(document, db)
 
+
+@router.delete("/documents/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("10/minute", key_func=get_user_or_ip_key)
+def delete_document(
+    id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Permanently deletes a document and all associated data.
+
+    Cascade cleanup order: citations → document_chunks → processing_jobs → document row → S3 file.
+    Only COMPLETED or FAILED documents can be deleted.
+    Enforces strict workspace tenant isolation (REQ-SEC-01).
+    """
+    # 1. Enforce hard workspace tenant isolation boundary
+    document = (
+        db.query(Document)
+        .join(Company)
+        .filter(
+            Document.id == id,
+            Company.workspace_id == current_user.workspace.id,
+        )
+        .first()
+    )
+
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    # 2. Only allow deletion for COMPLETED or FAILED documents
+    if document.status not in ("COMPLETED", "FAILED"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete a document with status '{document.status}'. Only COMPLETED or FAILED documents can be deleted.",
+        )
+
+    storage_key = document.storage_key
+
+    # 3. Cascade delete: citations referencing this document's chunks
+    chunk_ids = [
+        c.id for c in db.query(DocumentChunk.id).filter(DocumentChunk.document_id == id).all()
+    ]
+    if chunk_ids:
+        db.query(Citation).filter(Citation.chunk_id.in_(chunk_ids)).delete(synchronize_session=False)
+    # Also delete citations directly referencing this document
+    db.query(Citation).filter(Citation.document_id == id).delete(synchronize_session=False)
+
+    # 4. Delete document_chunks
+    db.query(DocumentChunk).filter(DocumentChunk.document_id == id).delete(synchronize_session=False)
+
+    # 5. Delete processing_jobs
+    db.query(ProcessingJob).filter(ProcessingJob.document_id == id).delete(synchronize_session=False)
+
+    # 6. Delete the document row
+    db.delete(document)
+    db.commit()
+
+    # 7. Delete S3 file (after DB commit — best-effort)
+    delete_file_from_s3(storage_key)
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -106,3 +106,15 @@ export async function retryDocument(documentId: string): Promise<DocumentItem> {
 
   return res.json();
 }
+
+export async function deleteDocument(documentId: string): Promise<void> {
+  const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/documents/${documentId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to delete document" }));
+    throw new Error(err.detail || "Failed to delete document");
+  }
+}

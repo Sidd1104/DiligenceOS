@@ -19,6 +19,7 @@ import {
   Presentation,
   ClipboardList,
   Plus,
+  Trash2,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
@@ -28,6 +29,7 @@ import {
   fetchCompanyDocuments,
   retryDocument,
   uploadDocument,
+  deleteDocument,
 } from "@/lib/documents";
 import { Button } from "@/components/ui/button";
 import { DiligenceLogo } from "@/components/ui/logo";
@@ -56,6 +58,7 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [retryingIds, setRetryingIds] = useState<Record<string, boolean>>({});
+  const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -68,6 +71,23 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
       console.error("Failed to retry document processing:", err);
     } finally {
       setRetryingIds((prev) => ({ ...prev, [documentId]: false }));
+    }
+  };
+
+  const handleDelete = async (documentId: string) => {
+    if (!window.confirm("Remove this document? This will permanently delete the file and all associated data.")) {
+      return;
+    }
+    try {
+      setDeletingIds((prev) => ({ ...prev, [documentId]: true }));
+      await deleteDocument(documentId);
+      await loadDocuments(false);
+    } catch (err: unknown) {
+      console.error("Failed to delete document:", err);
+      const message = err instanceof Error ? err.message : "Failed to delete document";
+      setUploadError(message);
+    } finally {
+      setDeletingIds((prev) => ({ ...prev, [documentId]: false }));
     }
   };
 
@@ -337,7 +357,7 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left Column: Upload Dropzone Card */}
               <div className="lg:col-span-1 space-y-4">
-                <Card className="border border-[rgba(245,243,239,0.08)] bg-[#15151c]">
+                <Card className="border border-[rgba(245,243,239,0.08)] bg-[#15151c] hover:border-[rgba(212,175,106,0.28)] hover:-translate-y-0.5">
                   <CardHeader>
                     <CardTitle className="text-base font-heading flex items-center gap-2 text-[#f5f3ef]">
                       <UploadCloud className="h-5 w-5 text-[#d4af6a]" />
@@ -426,7 +446,7 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
 
               {/* Right Column: Documents List */}
               <div className="lg:col-span-2 space-y-4">
-                <Card className="h-full flex flex-col justify-between border border-[rgba(245,243,239,0.08)] bg-[#15151c]">
+                <Card className="h-full flex flex-col justify-between border border-[rgba(245,243,239,0.08)] bg-[#15151c] hover:border-transparent hover:translate-y-0">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-[rgba(245,243,239,0.08)]">
                     <div>
                       <CardTitle className="text-base font-heading flex items-center gap-2 text-[#f5f3ef]">
@@ -464,7 +484,7 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
                         {documents.map((doc) => (
                           <div
                             key={doc.id}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3 hover:bg-white/5 transition-colors"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3 transition-colors"
                           >
                             <div className="flex items-start gap-3 min-w-0">
                               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[rgba(212,175,106,0.14)] text-[#d4af6a] border border-[rgba(212,175,106,0.28)] mt-0.5">
@@ -523,6 +543,22 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
                                     View
                                   </Button>
                                 </Link>
+                              )}
+                              {(doc.status === "COMPLETED" || doc.status === "FAILED") && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={deletingIds[doc.id]}
+                                  onClick={() => handleDelete(doc.id)}
+                                  className="h-7 w-7 p-0 text-[#9a968c] hover:text-[#ef4444] hover:bg-[#ef4444]/10"
+                                  title="Remove document"
+                                >
+                                  {deletingIds[doc.id] ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  )}
+                                </Button>
                               )}
                             </div>
                           </div>
