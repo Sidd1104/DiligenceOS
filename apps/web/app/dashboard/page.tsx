@@ -229,18 +229,14 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 w-full lg:w-auto shrink-0">
-              <div className="rounded-xl border border-[rgba(245,243,239,0.08)] bg-[#0d0d11]/80 p-4 text-center min-w-[100px]">
+            <div className="grid grid-cols-2 gap-3 w-full lg:w-auto shrink-0">
+              <div className="rounded-xl border border-[rgba(245,243,239,0.08)] bg-[#0d0d11]/80 p-4 text-center min-w-[110px]">
                 <p className="text-[10px] font-mono uppercase tracking-wider text-[#9a968c]">Entities</p>
                 <p className="text-2xl font-bold text-[#f5f3ef] font-mono mt-1">{companies.length}</p>
               </div>
-              <div className="rounded-xl border border-[rgba(245,243,239,0.08)] bg-[#0d0d11]/80 p-4 text-center min-w-[100px]">
+              <div className="rounded-xl border border-[rgba(245,243,239,0.08)] bg-[#0d0d11]/80 p-4 text-center min-w-[110px]">
                 <p className="text-[10px] font-mono uppercase tracking-wider text-[#9a968c]">Pipeline</p>
                 <p className="text-lg font-bold text-[#10b981] font-mono mt-1">Active</p>
-              </div>
-              <div className="rounded-xl border border-[rgba(245,243,239,0.08)] bg-[#0d0d11]/80 p-4 text-center min-w-[100px]">
-                <p className="text-[10px] font-mono uppercase tracking-wider text-[#9a968c]">Embeddings</p>
-                <p className="text-2xl font-bold text-[#d4af6a] font-mono mt-1">1024-d</p>
               </div>
             </div>
           </div>
