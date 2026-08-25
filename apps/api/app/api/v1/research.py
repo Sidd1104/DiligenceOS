@@ -109,7 +109,7 @@ def ask_company_research_question(
     question_vector = q_embeddings[0] if q_embeddings else []
 
     # 4. Vector retrieval of document chunks
-    chunks_info, max_score = retrieve_relevant_chunks(db, company_id, question_vector, top_k=10)
+    chunks_info, max_score = retrieve_relevant_chunks(db, company_id, question_vector, top_k=10, question=payload.question)
 
     # Extract session.id to local variable before DB session expiration/detach in generator
     target_session_id = session.id

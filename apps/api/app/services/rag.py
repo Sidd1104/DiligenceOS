@@ -52,15 +52,16 @@ def retrieve_relevant_chunks(
     company_id: UUID,
     question_vector: List[float],
     top_k: int = 10,
+    question: str = "",
 ) -> Tuple[List[dict], float]:
     """
-    Queries `document_chunks` strictly for a specific company_id using a unified hybrid vector similarity engine.
+    Queries `document_chunks` strictly for a specific company_id using a unified hybrid vector + keyword similarity engine.
 
     HARD DATABASE-LEVEL TENANT ISOLATION:
     Filters both DocumentChunk.company_id and Document.company_id to target_company_id.
     Zero chunks from any other company can ever leak into the candidate pool.
     """
-    if not question_vector or not company_id:
+    if not company_id:
         return [], 0.0
 
     # Ensure company_id is a valid UUID object
@@ -79,28 +80,35 @@ def retrieve_relevant_chunks(
     if not chunks:
         return [], 0.0
 
+    # Extract keywords from question for lexical relevance boost
+    question_lower = question.lower() if question else ""
+    stopwords = {"what", "is", "the", "a", "an", "who", "where", "how", "and", "or", "to", "in", "of", "for", "on", "with", "about", "his", "her", "their", "this", "that", "it"}
+    raw_terms = re.findall(r"\b[a-zA-Z0-9_-]{2,}\b", question_lower)
+    query_keywords = [t for t in raw_terms if t not in stopwords]
+
     scored_chunks = []
     for chunk in chunks:
         # Base vector similarity
-        sim = compute_cosine_similarity(question_vector, chunk.embedding) if chunk.embedding is not None else 0.0
+        sim = compute_cosine_similarity(question_vector, chunk.embedding) if (question_vector and chunk.embedding is not None) else 0.0
 
         # In unit test mode, assign baseline similarity so mock vectors evaluate cleanly
         if is_test_environment() and sim < 0.3:
             sim = max(sim, 0.85)
 
-        # Keyword & Section Relevance Boost
         text_lower = chunk.text.lower()
         sec_lower = (chunk.section_title or "").lower()
 
+        # Keyword overlap boost
+        keyword_boost = 0.0
+        if query_keywords:
+            matches = sum(1 for kw in query_keywords if kw in text_lower or kw in sec_lower)
+            keyword_boost = min(0.35, matches * 0.12)
+
         financial_boost = 0.0
         if any(k in text_lower or k in sec_lower for k in ["revenue", "financial", "item 7", "item 8", "md&a", "income", "margin", "fiscal", "growth"]):
-            financial_boost += 0.15
+            financial_boost = 0.10
 
-        # Demote generic cover page chunks (Page 1) if they lack specific figures
-        if chunk.page_number == 1 and not any(k in text_lower for k in ["revenue", "growth", "margin", "income"]):
-            sim *= 0.5
-
-        final_score = sim + financial_boost
+        final_score = sim + keyword_boost + financial_boost
 
         doc = db.query(Document).filter(Document.id == chunk.document_id).first()
         filename = doc.filename if doc else "Document.pdf"
@@ -124,7 +132,7 @@ def retrieve_relevant_chunks(
     scored_chunks.sort(key=lambda x: x["similarity"], reverse=True)
 
     # Minimum hybrid similarity score required for inclusion (relevance floor threshold)
-    SIMILARITY_FLOOR = 0.40
+    SIMILARITY_FLOOR = 0.18
     filtered_chunks = [c for c in scored_chunks if c["similarity"] >= SIMILARITY_FLOOR]
 
     if not filtered_chunks and not is_test_environment():

@@ -61,6 +61,7 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [retryingIds, setRetryingIds] = useState<Record<string, boolean>>({});
   const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
+  const [docToDelete, setDocToDelete] = useState<DocumentItem | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,13 +77,13 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
     }
   };
 
-  const handleDelete = async (documentId: string) => {
-    if (!window.confirm("Remove this document? This will permanently delete the file and all associated data.")) {
-      return;
-    }
+  const confirmDelete = async () => {
+    if (!docToDelete) return;
+    const documentId = docToDelete.id;
     try {
       setDeletingIds((prev) => ({ ...prev, [documentId]: true }));
       await deleteDocument(documentId);
+      setDocToDelete(null);
       await loadDocuments(false);
     } catch (err: unknown) {
       console.error("Failed to delete document:", err);
@@ -545,7 +546,7 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
                                   variant="ghost"
                                   size="sm"
                                   disabled={deletingIds[doc.id]}
-                                  onClick={() => handleDelete(doc.id)}
+                                  onClick={() => setDocToDelete(doc)}
                                   className="h-7 w-7 p-0 text-[#9a968c] hover:text-[#ef4444] hover:bg-[#ef4444]/10"
                                   title="Remove document"
                                 >
@@ -592,6 +593,56 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
           </>
         )}
       </main>
+
+      {/* Custom In-App Remove Document Confirmation Modal */}
+      {docToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl border border-[rgba(245,243,239,0.12)] bg-[#15151c] p-6 shadow-2xl space-y-6">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#ef4444]/10 text-[#ef4444] border border-[#ef4444]/20">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold font-heading text-[#f5f3ef]">Remove Document</h3>
+                <p className="text-xs text-[#9a968c] leading-relaxed">
+                  Are you sure you want to remove <span className="font-semibold text-[#f5f3ef]">{docToDelete.filename}</span>?
+                  This action will permanently delete the file, embeddings, and all associated citations.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={deletingIds[docToDelete.id]}
+                onClick={() => setDocToDelete(null)}
+                className="h-9 px-4 text-xs font-medium border-[rgba(245,243,239,0.12)] text-[#9a968c] hover:text-[#f5f3ef]"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={deletingIds[docToDelete.id]}
+                onClick={confirmDelete}
+                className="h-9 px-4 text-xs font-medium bg-[#ef4444] hover:bg-[#dc2626] text-white gap-2"
+              >
+                {deletingIds[docToDelete.id] ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Removing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Remove Document
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

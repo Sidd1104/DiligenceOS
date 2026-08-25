@@ -10,7 +10,7 @@ Architecture reference: SRS §3.4 — Provider-agnostic AI layer.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Generator, List, Tuple
+from typing import Generator, List, Optional, Tuple
 
 from app.config import settings
 
