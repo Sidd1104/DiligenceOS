@@ -184,3 +184,23 @@ def test_logout_revokes_refresh_token_server_side(client):
     client.cookies.set("refresh_token", old_refresh_token)
     rejected_res = client.post("/api/v1/auth/refresh")
     assert rejected_res.status_code == 401
+
+
+def test_old_exposed_secret_jwt_is_rejected(client):
+    """
+    REQ-SEC-JWT: Confirm a JWT access token signed with an old/exposed secret key
+    is rejected with HTTP 401 Unauthorized when sent to protected endpoints.
+    """
+    import jwt
+
+    old_exposed_secret = "diligenceos-super-secret-key-change-in-production-2025"
+    old_signed_token = jwt.encode(
+        {"sub": "00000000-0000-0000-0000-000000000000"},
+        old_exposed_secret,
+        algorithm="HS256",
+    )
+
+    client.cookies.set("access_token", old_signed_token)
+    res = client.get("/api/v1/auth/me")
+    assert res.status_code == 401
+
