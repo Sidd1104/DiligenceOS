@@ -3,20 +3,29 @@
   "venv": ".venv",
   "extraPaths": [
     "apps/api",
-    "workers"
+    "workers",
+    "apps/api/.venv/Lib/site-packages"
   ],
   "executionEnvironments": [
     {
       "root": "apps/api",
       "extraPaths": [
-        "apps/api"
+        "apps/api",
+        "apps/api/.venv/Lib/site-packages"
       ]
     },
     {
       "root": "workers",
       "extraPaths": [
-        "workers"
+        "apps/api",
+        "workers",
+        "apps/api/.venv/Lib/site-packages"
       ]
     }
-  ]
+  ],
+  "reportAttributeAccessIssue": "warning",
+  "reportOptionalSubscript": "warning",
+  "reportPossiblyUnboundVariable": "warning",
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none"
 }

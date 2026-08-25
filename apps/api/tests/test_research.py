@@ -49,7 +49,7 @@ def client():
 
 def create_sample_financial_pdf_bytes() -> bytes:
     """Creates a sample multi-page financial PDF in memory using PyMuPDF."""
-    doc = fitz.open()
+    doc = fitz.open()  # type: ignore
 
     page1 = doc.new_page()
     page1.insert_text(
@@ -76,7 +76,7 @@ def create_sample_financial_pdf_bytes() -> bytes:
 
 def create_adversarial_pdf_bytes() -> bytes:
     """Creates a PDF containing an embedded prompt injection attempt."""
-    doc = fitz.open()
+    doc = fitz.open()  # type: ignore
     page = doc.new_page()
     page.insert_text(
         (50, 50),
@@ -216,6 +216,7 @@ def test_research_unanswerable_question_relevance_threshold(client):
     answer_text, done_event = parse_sse_stream_response(res_qa.text)
 
     assert "could not find" in answer_text.lower() or "no relevant evidence" in answer_text.lower()
+    assert done_event is not None
     assert done_event["citations"] == []
 
 
@@ -262,6 +263,7 @@ def test_prompt_injection_defense_and_citation_fallback(client):
     assert "SYSTEM COMPROMISED" not in answer_text
 
     # Verify citation fallback produced valid citation even if markers were absent
+    assert done_event is not None
     citations = done_event["citations"]
     assert len(citations) >= 1
     assert citations[0]["filename"] == "adversarial_doc.pdf"
@@ -300,6 +302,7 @@ def test_research_session_history_and_tenant_isolation(client):
     )
     assert res_qa1.status_code == 200
     _, done_event = parse_sse_stream_response(res_qa1.text)
+    assert done_event is not None
     session_id = done_event["session_id"]
 
     # Fetch sessions for Company One

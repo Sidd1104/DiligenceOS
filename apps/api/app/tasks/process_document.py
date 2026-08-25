@@ -92,6 +92,9 @@ def run_process_document_stub(
             db = SessionLocal()
             close_db_when_done = True
 
+    job: Optional[ProcessingJob] = None
+    doc: Optional[Document] = None
+
     try:
         job_id = UUID(str(job_id_str))
         job = db.query(ProcessingJob).filter(ProcessingJob.id == job_id).first()
@@ -185,11 +188,11 @@ def run_process_document_stub(
         logger.exception(f"Unhandled error in document processing job {job_id_str}: {err}")
         try:
             now_err = datetime.now(timezone.utc)
-            if "job" in locals() and job:
+            if job is not None:
                 job.status = "FAILED"
                 job.error_message = str(err)
                 job.completed_at = now_err
-            if "doc" in locals() and doc:
+            if doc is not None:
                 doc.status = "FAILED"
                 doc.updated_at = now_err
             db.commit()

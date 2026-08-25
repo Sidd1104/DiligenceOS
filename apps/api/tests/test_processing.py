@@ -46,7 +46,7 @@ def client():
 
 def create_sample_pdf_bytes() -> bytes:
     """Creates a multi-page PDF document in memory using PyMuPDF."""
-    doc = fitz.open()
+    doc = fitz.open()  # type: ignore
 
     # Page 1
     page1 = doc.new_page()
@@ -75,7 +75,7 @@ def create_sample_pdf_bytes() -> bytes:
 
 def create_empty_scanned_pdf_bytes() -> bytes:
     """Creates a PDF page with no extractable text."""
-    doc = fitz.open()
+    doc = fitz.open()  # type: ignore
     doc.new_page()  # Blank page without text
     pdf_bytes = doc.tobytes()
     doc.close()

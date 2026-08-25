@@ -5,6 +5,14 @@ Shares models with apps/api. Configured with Redis as broker and result backend.
 """
 
 import os
+import sys
+from pathlib import Path
+
+# Ensure apps/api directory is in sys.path for worker imports
+api_path = str(Path(__file__).resolve().parent.parent / "apps" / "api")
+if api_path not in sys.path:
+    sys.path.insert(0, api_path)
+
 from celery import Celery
 
 # Read Redis URL from environment

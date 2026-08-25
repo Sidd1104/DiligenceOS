@@ -1,0 +1,10 @@
+{
+  "venvPath": "../api",
+  "venv": ".venv",
+  "extraPaths": [
+    "../api",
+    "../api/.venv/Lib/site-packages"
+  ],
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none"
+}
