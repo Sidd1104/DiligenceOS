@@ -53,7 +53,7 @@ export default function LoginPage() {
   return (
     <AuroraBackground className="flex min-h-screen flex-col items-center justify-center p-4">
 
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-lg space-y-6">
         {/* Branding Header */}
         <div className="text-center space-y-2 flex flex-col items-center">
           <DiligenceLogo className="w-12 h-12 mb-1" textSize="text-3xl" />

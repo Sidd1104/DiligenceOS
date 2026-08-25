@@ -74,8 +74,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: "Login failed" }));
-      throw new Error(err.detail || "Invalid credentials");
+      const err = await res.json().catch(() => ({ detail: "Invalid credentials" }));
+      let detailMsg = "Invalid credentials";
+      if (typeof err.detail === "string") {
+        detailMsg = err.detail;
+      } else if (Array.isArray(err.detail) && err.detail.length > 0) {
+        detailMsg = err.detail[0].msg || err.detail[0].detail || "Invalid credentials";
+      }
+      throw new Error(detailMsg);
     }
 
     const userData = await res.json();
@@ -96,11 +102,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: "Registration failed" }));
-      throw new Error(err.detail || "Registration failed");
+      let detailMsg = "Registration failed";
+      if (typeof err.detail === "string") {
+        detailMsg = err.detail;
+      } else if (Array.isArray(err.detail) && err.detail.length > 0) {
+        detailMsg = err.detail[0].msg || err.detail[0].detail || "Registration failed";
+      }
+      throw new Error(detailMsg);
     }
 
-    // Automatically log in after registration
-    await login(email, password);
+    const userData = await res.json();
+    setUser(userData);
   };
 
   const logout = async () => {

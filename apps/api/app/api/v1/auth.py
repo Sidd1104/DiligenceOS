@@ -107,7 +107,7 @@ def _clear_auth_cookies(response: Response) -> None:
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user",
 )
-@limiter.limit("3/minute")
+@limiter.limit("10/minute")
 def register_user(
     request: Request,
     payload: RegisterRequest,
@@ -118,7 +118,8 @@ def register_user(
     Registers a new user with email + password.
     Hashes password, auto-creates a default Workspace, and issues HttpOnly auth cookies.
     """
-    existing_user = db.query(User).filter(User.email == payload.email).first()
+    clean_email = payload.email.lower().strip()
+    existing_user = db.query(User).filter(User.email.ilike(clean_email)).first()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -128,7 +129,7 @@ def register_user(
     # Hash password & create user
     hashed_pw = hash_password(payload.password)
     user = User(
-        email=payload.email,
+        email=clean_email,
         password_hash=hashed_pw,
         full_name=payload.full_name,
     )
@@ -136,7 +137,7 @@ def register_user(
     db.flush()  # populate user.id
 
     # Auto-create workspace for user (REQ-WS-01)
-    workspace_name = f"{payload.full_name or payload.email}'s Workspace"
+    workspace_name = f"{payload.full_name or clean_email}'s Workspace"
     workspace = Workspace(
         user_id=user.id,
         name=workspace_name,
@@ -163,7 +164,8 @@ def login_user(
     """
     Verifies user credentials and sets HttpOnly access_token and refresh_token cookies.
     """
-    user = db.query(User).filter(User.email == payload.email).first()
+    clean_email = payload.email.lower().strip()
+    user = db.query(User).filter(User.email.ilike(clean_email)).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
