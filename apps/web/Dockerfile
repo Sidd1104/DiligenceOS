@@ -9,7 +9,12 @@ RUN npm ci
 # Copy source
 COPY . .
 
+# Pre-build Next.js app for instant page rendering performance
+ENV NEXT_PUBLIC_API_URL=http://localhost:8000
+RUN npm run build
+
 EXPOSE 3000
 
-# Development mode with hot reload
-CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
+# Fast production server
+CMD ["npm", "run", "start", "--", "-H", "0.0.0.0"]
+

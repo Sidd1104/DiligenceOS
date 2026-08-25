@@ -126,8 +126,8 @@ class GeminiProvider(AIProvider):
     Supports streaming via generate_content_stream.
     """
 
-    GEMINI_MODEL = "gemini-2.5-flash"
-    FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-3-flash-preview"]
+    GEMINI_MODEL = "gemini-3.6-flash"
+    FALLBACK_MODELS = ["gemini-flash-latest", "gemini-2.5-flash"]
 
     def __init__(self, api_key: str):
         self._api_key = api_key
