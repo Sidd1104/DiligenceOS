@@ -35,6 +35,12 @@ celery_app.conf.update(
     worker_prefetch_multiplier=1,
 )
 
+if REDIS_URL.startswith("rediss://"):
+    celery_app.conf.update(
+        broker_use_ssl={"ssl_cert_reqs": None},
+        redis_backend_use_ssl={"ssl_cert_reqs": None},
+    )
+
 
 @celery_app.task(name="diligenceos.health_check")
 def health_check_task():

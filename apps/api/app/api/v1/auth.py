@@ -82,6 +82,24 @@ def _issue_tokens_and_set_cookies(user: User, response: Response, db: Session) -
     )
 
 
+def _clear_auth_cookies(response: Response) -> None:
+    domain = settings.cookie_domain or None
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        domain=domain,
+        samesite=settings.cookie_samesite,
+        secure=settings.cookie_secure,
+    )
+    response.delete_cookie(
+        key="refresh_token",
+        path="/",
+        domain=domain,
+        samesite=settings.cookie_samesite,
+        secure=settings.cookie_secure,
+    )
+
+
 @router.post(
     "/register",
     response_model=UserResponse,
@@ -182,8 +200,7 @@ def refresh_token(
             raw_refresh_token = auth_header
 
     if not raw_refresh_token:
-        response.delete_cookie(key="access_token", path="/")
-        response.delete_cookie(key="refresh_token", path="/")
+        _clear_auth_cookies(response)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token missing",
@@ -201,8 +218,7 @@ def refresh_token(
 
     now = datetime.now(timezone.utc)
     if not token_record:
-        response.delete_cookie(key="access_token", path="/")
-        response.delete_cookie(key="refresh_token", path="/")
+        _clear_auth_cookies(response)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or revoked refresh token",
@@ -216,8 +232,7 @@ def refresh_token(
     if record_expires_at <= now:
         token_record.revoked = True
         db.commit()
-        response.delete_cookie(key="access_token", path="/")
-        response.delete_cookie(key="refresh_token", path="/")
+        _clear_auth_cookies(response)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token expired",
@@ -232,8 +247,7 @@ def refresh_token(
 
     if not user:
         db.commit()
-        response.delete_cookie(key="access_token", path="/")
-        response.delete_cookie(key="refresh_token", path="/")
+        _clear_auth_cookies(response)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
@@ -268,8 +282,7 @@ def logout_user(
             token_record.revoked = True
             db.commit()
 
-    response.delete_cookie(key="access_token", path="/")
-    response.delete_cookie(key="refresh_token", path="/")
+    _clear_auth_cookies(response)
     return {"status": "ok", "message": "Logged out successfully"}
 
 
