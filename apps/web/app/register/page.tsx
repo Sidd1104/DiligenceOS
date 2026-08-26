@@ -70,9 +70,16 @@ export default function RegisterPage() {
           </div>
 
           {error && (
-            <div className="rounded-xl bg-[#ef4444]/10 p-3.5 text-xs text-[#ef4444] border border-[#ef4444]/20 flex items-center gap-2">
-              <span className="font-semibold">Registration Error:</span>
-              <span>{error}</span>
+            <div className="rounded-xl bg-[#ef4444]/10 p-3.5 text-xs text-[#ef4444] border border-[#ef4444]/20 flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Registration Error:</span>
+                <span>{error}</span>
+              </div>
+              {error.toLowerCase().includes("already exists") && (
+                <Link href="/login" className="text-[#d4af6a] hover:underline font-semibold text-xs mt-0.5">
+                  Click here to log in with this account →
+                </Link>
+              )}
             </div>
           )}
 
