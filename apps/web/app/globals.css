@@ -94,6 +94,18 @@
   }
 }
 
+/* ─── Hide Browser-Native Duplicate Password Eye Icons ──────────────────────── */
+input::-ms-reveal,
+input::-ms-clear,
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 /* ─── Streaming UX Animations ─────────────────────────────────────────────── */
 
 /* Blinking cursor ▍ — terminal-style, Champagne Gold */
