@@ -323,14 +323,14 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
           <>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[rgba(245,243,239,0.08)] pb-6">
               <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-3xl font-semibold tracking-tight font-heading text-[#f5f3ef]">{company.name}</h1>
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                  <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight font-heading text-[#f5f3ef] break-words">{company.name}</h1>
                   {company.industry ? (
-                    <span className="rounded-full bg-[rgba(212,175,106,0.14)] px-3 py-1 text-xs font-mono text-[#d4af6a] border border-[rgba(212,175,106,0.28)]">
+                    <span className="rounded-full bg-[rgba(212,175,106,0.14)] px-3 py-1 text-xs font-mono text-[#d4af6a] border border-[rgba(212,175,106,0.28)] shrink-0">
                       {company.industry}
                     </span>
                   ) : (
-                    <span className="rounded-full bg-white/5 px-3 py-1 text-xs font-mono text-[#9a968c] border border-[rgba(245,243,239,0.08)]">
+                    <span className="rounded-full bg-white/5 px-3 py-1 text-xs font-mono text-[#9a968c] border border-[rgba(245,243,239,0.08)] shrink-0">
                       Unspecified Industry
                     </span>
                   )}
@@ -366,7 +366,7 @@ export default function CompanyOverviewPage({ params }: CompanyPageProps) {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {/* Document Type Helper Chips */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <span className="flex items-center gap-1.5 rounded-lg border border-[rgba(245,243,239,0.08)] bg-[#0d0d11] px-2.5 py-1.5 text-xs text-[#9a968c]">
                         <TrendingUp className="h-3.5 w-3.5 text-[#d4af6a] shrink-0" />
                         <span>Annual reports / 10-K</span>

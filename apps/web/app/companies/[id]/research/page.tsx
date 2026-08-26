@@ -152,6 +152,7 @@ export default function ResearchPage() {
   const [sessions, setSessions] = useState<ResearchSessionItem[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<EnrichedMessage[]>([]);
+  const [showMobileSessions, setShowMobileSessions] = useState(false);
 
   // Form
   const [question, setQuestion] = useState("");
@@ -429,20 +430,34 @@ export default function ResearchPage() {
             </Button>
           </Link>
         </div>
-        <div className="flex-1 flex items-center justify-between px-4 sm:px-6 h-full">
-          <div className="flex items-center gap-3">
-            <Link href={`/companies/${companyId}`} className="md:hidden">
+        <div className="flex-1 flex items-center justify-between px-3 sm:px-6 h-full">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Link href={`/companies/${companyId}`} className="md:hidden shrink-0">
               <Button variant="ghost" size="sm" className="p-1.5 text-[#9a968c] hover:text-[#f5f3ef]">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <Brain className="h-5 w-5 text-[#d4af6a]" />
-            <h1 className="font-semibold text-base font-heading text-[#f5f3ef]">AI Research Assistant</h1>
+            <Brain className="h-5 w-5 text-[#d4af6a] shrink-0" />
+            <h1 className="font-semibold text-sm sm:text-base font-heading text-[#f5f3ef] truncate max-w-[130px] sm:max-w-none">
+              AI Research Assistant
+            </h1>
             {company && (
-              <span className="rounded-full bg-[#d4af6a]/10 px-2.5 py-0.5 text-xs font-mono text-[#d4af6a] border border-[#d4af6a]/20">
+              <span className="hidden sm:inline-flex rounded-full bg-[#d4af6a]/10 px-2.5 py-0.5 text-xs font-mono text-[#d4af6a] border border-[#d4af6a]/20 truncate">
                 {company.name}
               </span>
             )}
+          </div>
+
+          <div className="flex items-center gap-2 md:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowMobileSessions(!showMobileSessions)}
+              className="gap-1 text-xs border-white/10 bg-[#15151c] text-[#d4af6a] px-2.5"
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span>Sessions ({sessions.length})</span>
+            </Button>
           </div>
         </div>
       </header>
@@ -812,6 +827,67 @@ export default function ResearchPage() {
           </div>
         </main>
       </div>
+
+      {/* ── Mobile Sessions Modal Drawer ─────────────────────────────────── */}
+      {showMobileSessions && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-[#0a0a0d]/95 backdrop-blur-xl md:hidden">
+          <div className="flex h-16 items-center justify-between border-b border-white/10 px-6">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-[#d4af6a]" />
+              <h3 className="font-semibold text-sm text-[#f5f3ef]">Research Sessions</h3>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowMobileSessions(false)}
+              className="text-[#9a968c] hover:text-[#f5f3ef]"
+            >
+              Close
+            </Button>
+          </div>
+
+          <div className="p-4 border-b border-white/10">
+            <Button
+              onClick={() => {
+                handleNewSession();
+                setShowMobileSessions(false);
+              }}
+              variant="outline"
+              className="w-full justify-start gap-2 border-white/10 bg-[#15151c] text-[#f5f3ef] hover:bg-[#1c1c24]"
+            >
+              <Plus className="h-4 w-4 text-[#d4af6a]" />
+              New Research Session
+            </Button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            {sessions.length === 0 ? (
+              <div className="p-4 text-center text-xs text-[#9a968c]">No past sessions yet</div>
+            ) : (
+              sessions.map((sess) => (
+                <button
+                  key={sess.id}
+                  onClick={() => {
+                    handleSelectSession(sess.id);
+                    setShowMobileSessions(false);
+                  }}
+                  className={`w-full text-left rounded-xl p-3.5 text-xs transition-colors flex items-center justify-between border ${
+                    activeSessionId === sess.id
+                      ? "bg-[#d4af6a]/15 border-[#d4af6a]/40 font-medium text-[#f5f3ef]"
+                      : "bg-[#15151c] border-white/5 text-[#9a968c]"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <MessageSquare className="h-4 w-4 shrink-0 text-[#d4af6a]" />
+                    <span className="truncate">{sess.title || "Untitled Session"}</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 opacity-50" />
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

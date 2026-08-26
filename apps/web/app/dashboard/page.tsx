@@ -197,14 +197,14 @@ export default function DashboardPage() {
             <DiligenceLogo className="w-8 h-8" textSize="text-base" />
           </Link>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 rounded-full border border-[rgba(245,243,239,0.08)] bg-[#15151c] px-3.5 py-1 text-xs">
-              <span className="h-2 w-2 rounded-full bg-[#10b981] animate-pulse" />
-              <span className="font-mono text-[#9a968c]">{user.email}</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 rounded-full border border-[rgba(245,243,239,0.08)] bg-[#15151c] px-3 py-1 text-xs">
+              <span className="h-2 w-2 rounded-full bg-[#10b981] animate-pulse shrink-0" />
+              <span className="font-mono text-[#9a968c] truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">{user.email}</span>
             </div>
 
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-[#9a968c] hover:text-[#f5f3ef]">
-              <LogOut className="h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-[#9a968c] hover:text-[#f5f3ef] px-2 sm:px-3">
+              <LogOut className="h-4 w-4 shrink-0" />
               <span className="hidden sm:inline">Logout</span>
             </Button>
           </div>
