@@ -34,3 +34,5 @@ class UserResponse(BaseModel):
     full_name: Optional[str] = None
     workspace_id: Optional[UUID] = None
     created_at: datetime
+    access_token: Optional[str] = None
+    token_type: Optional[str] = "bearer"

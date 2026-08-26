@@ -85,6 +85,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const userData = await res.json();
+    if (userData?.access_token) {
+      const { setStoredTokens } = await import("./api");
+      setStoredTokens(userData.access_token);
+    }
     setUser(userData);
   };
 
@@ -112,11 +116,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const userData = await res.json();
+    if (userData?.access_token) {
+      const { setStoredTokens } = await import("./api");
+      setStoredTokens(userData.access_token);
+    }
     setUser(userData);
   };
 
   const logout = async () => {
     try {
+      const { clearStoredTokens } = await import("./api");
+      clearStoredTokens();
       await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
         method: "POST",
         credentials: "include",

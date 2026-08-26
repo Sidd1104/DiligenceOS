@@ -80,6 +80,8 @@ def _issue_tokens_and_set_cookies(user: User, response: Response, db: Session) -
         full_name=user.full_name,
         workspace_id=workspace_id,
         created_at=user.created_at,
+        access_token=access_token,
+        token_type="bearer",
     )
 
 
